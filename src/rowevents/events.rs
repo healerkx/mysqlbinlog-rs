@@ -39,7 +39,6 @@ pub const UPDATE_ROWS_EVENT2: i8 = 31;
 pub const DELETE_ROWS_EVENT2: i8 = 32;
 
 
-
 pub struct DeleteEvent {
     
 }

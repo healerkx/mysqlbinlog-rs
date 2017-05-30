@@ -13,7 +13,6 @@ pub struct Reader {
 
 impl Reader {
     
-
     pub fn new(filename: &str) -> Result<Reader> {
         
         if let Some(stream) = Stream::from_file(filename) {

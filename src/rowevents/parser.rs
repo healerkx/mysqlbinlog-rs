@@ -50,9 +50,11 @@ impl Parser {
     }
 
     pub fn read_event(&mut self, eh: &EventHeader) -> Result<Event> {
-        if eh.get_event_type() == UNKNOWN_EVENT {
+        /*
+        if eh.get_event_type() == EventTypes::UNKNOWN_EVENT {
 
         }
+        */
         let data = self.stream.read(eh.get_event_len() - 19);
 
         let entry: Vec<ValueType> = vec![];

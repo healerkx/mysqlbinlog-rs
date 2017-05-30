@@ -1,10 +1,11 @@
 
 use chrono::{NaiveDateTime, NaiveDate};
 
+
 #[derive(Debug)]
 pub struct EventHeader {
     timestamp: i32, 
-    type_code: i8, 
+    type_code: i8,
     server_id: i32, 
     event_len: i32, 
     next_pos: i32, 
