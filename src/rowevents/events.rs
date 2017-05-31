@@ -39,6 +39,20 @@ pub const UPDATE_ROWS_EVENT2: i8 = 31;
 pub const DELETE_ROWS_EVENT2: i8 = 32;
 
 
+pub struct FormatDescriptorEvent {
+
+}
+
+#[derive(Debug)]
+pub struct XidEvent {
+    xid: i64
+}
+
+#[derive(Debug)]
+pub struct TableMapEvent {
+
+}
+
 pub struct DeleteEvent {
     
 }
@@ -52,15 +66,36 @@ pub struct UpdateEvent {
     entry2: Vec<ValueType>
 }
 
+impl FormatDescriptorEvent {
+    pub fn new() -> FormatDescriptorEvent {
+         FormatDescriptorEvent{}
+    }
+}
+
+impl XidEvent {
+    pub fn new(xid: i64) -> XidEvent {
+         XidEvent{ xid: xid }
+    }  
+}
+
+impl TableMapEvent {
+    pub fn new() -> TableMapEvent {
+         TableMapEvent{}
+    }  
+}
+
 impl InsertEvent {
-     pub fn new(entry: Vec<ValueType>) -> InsertEvent {
+    pub fn new(entry: Vec<ValueType>) -> InsertEvent {
          InsertEvent{entry: entry}
-     }
+    }
 }
 
 
 pub enum Event {
 
+    FormatDescriptor(FormatDescriptorEvent),
+    Xid(XidEvent),
+    TableMap(TableMapEvent),
     Delete(DeleteEvent),
     Insert(InsertEvent),
     Update(UpdateEvent),
