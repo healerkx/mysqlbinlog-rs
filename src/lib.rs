@@ -5,8 +5,6 @@ mod tests {
     }
 }
 
-
-
 pub use rowevents::reader::{ Reader };
 pub use rowevents::stream::{ Stream };
 pub use rowevents::parser::{ Parser };

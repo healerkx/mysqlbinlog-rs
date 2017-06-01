@@ -54,7 +54,7 @@ pub struct TableMapEvent {
 }
 
 pub struct DeleteEvent {
-    
+    entry: Vec<ValueType>
 }
 
 pub struct InsertEvent {
@@ -90,9 +90,21 @@ impl InsertEvent {
     }
 }
 
+impl UpdateEvent {
+    pub fn new(entry1: Vec<ValueType>, entry2: Vec<ValueType>) -> UpdateEvent {
+         UpdateEvent{entry1: entry1, entry2: entry2}
+    }
+}
+
+impl DeleteEvent {
+    pub fn new(entry: Vec<ValueType>) -> DeleteEvent {
+         DeleteEvent{entry: entry}
+    }
+}
+
 
 pub enum Event {
-
+    Unknown,
     FormatDescriptor(FormatDescriptorEvent),
     Xid(XidEvent),
     TableMap(TableMapEvent),

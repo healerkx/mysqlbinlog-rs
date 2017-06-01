@@ -31,10 +31,11 @@ pub enum FieldType {
     Blob = 252,
     VarString = 253,
     String = 254,
-    Geometry = 255,
+    Geometry = 255
 }
 
 pub enum ValueType {
+    Null,
     Tinyint(i8),
     Int(i32),
     Chars(String)

@@ -43,15 +43,15 @@ impl Reader {
 
             TABLE_MAP_EVENT  => self.parser.read_table_map_event(eh),
 
-            WRITE_ROWS_EVENT  => self.parser.read_event(eh),
-            UPDATE_ROWS_EVENT  => self.parser.read_event(eh),
-            DELETE_ROWS_EVENT  => self.parser.read_event(eh),
+            // WRITE_ROWS_EVENT  => self.parser.read_event(eh),
+            // UPDATE_ROWS_EVENT  => self.parser.read_event(eh),
+            // DELETE_ROWS_EVENT  => self.parser.read_event(eh),
 
-            WRITE_ROWS_EVENT2 => self.parser.read_event(eh),
-            UPDATE_ROWS_EVENT2 => self.parser.read_event(eh),
-            DELETE_ROWS_EVENT2 => self.parser.read_event(eh),
+            WRITE_ROWS_EVENT2 => self.parser.read_write_event(eh),
+            UPDATE_ROWS_EVENT2 => self.parser.read_update_event(eh),
+            DELETE_ROWS_EVENT2 => self.parser.read_delete_event(eh),
 
-            _ => self.parser.read_event(eh)
+            _ => self.parser.read_unknown_event(eh)
         }
     }
 }
