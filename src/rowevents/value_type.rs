@@ -35,9 +35,14 @@ pub enum FieldType {
 }
 
 pub enum ValueType {
+    Unknown,
     Null,
     Tinyint(i8),
+    Shortint(i16),
     Int(i32),
-    Chars(String)
+    Longlong(i64),
+    Float(f32),
+    Double(f64),
+    String(String)
 
 }

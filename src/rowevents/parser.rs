@@ -170,9 +170,14 @@ impl Parser {
 
     pub fn read_write_event(&mut self, eh: &EventHeader) -> Result<Event> {
         println!("write");
-        self.read_rows_event(eh, false);
-        let e = InsertEvent::new(vec![]);
-        Ok(Event::Insert(e))
+        if let Ok((v, col_count)) = self.read_rows_event(eh, false) {
+            let (values, _) = self.parse_row_values(&v, col_count);
+            let e = InsertEvent::new(values);
+            Ok(Event::Insert(e))
+        } else {
+            let e = InsertEvent::new(vec![]);
+            Ok(Event::Insert(e))
+        }
     }
 
     pub fn read_update_event(&mut self, eh: &EventHeader) -> Result<Event> {
@@ -189,7 +194,7 @@ impl Parser {
         Ok(Event::Delete(e))
     }
 
-    pub fn read_rows_event(&mut self, eh: &EventHeader, is_update_event: bool) -> Result<(Vec<u8>)> {
+    pub fn read_rows_event(&mut self, eh: &EventHeader, is_update_event: bool) -> Result<(Vec<u8>, usize)> {
         {
             let data = self.stream.read(8);
             let mut cursor = Cursor::new(&data);
@@ -212,7 +217,7 @@ impl Parser {
         }
 
         let data_len = eh.get_event_len() - 19 - 8 - extra_data_len;
-        let rows_data = {
+        let (rows_data, col_count) = {
             let data = self.stream.read(data_len - 4);
             let (col_count, size) = get_field_length(data);
             
@@ -221,9 +226,9 @@ impl Parser {
             let bitmap_size:usize = (col_count as usize + 7) / 8;
             // https://github.com/wenerme/myfacility/blob/master/binlog/row.go#L164
             if is_update_event {
-                Vec::from(&data[bitmap_size * 2 .. ])
+                (Vec::from(&data[bitmap_size * 2 .. ]), col_count)
             } else {
-                Vec::from(&data[bitmap_size .. ])
+                (Vec::from(&data[bitmap_size .. ]), col_count)
             }
         };
 
@@ -232,11 +237,30 @@ impl Parser {
             self.stream.read(4);
         }
         
-        Ok((rows_data))
+        Ok((rows_data, col_count as usize))
     }
 
-    fn parse_row_values(&self, data: &[u8]) -> Vec<ValueType> {
-        vec![]
+    fn parse_row_values(&self, data: &[u8], col_count: usize) -> (Vec<ValueType>, usize) {
+        let mut values = Vec::with_capacity(col_count);
+        let mut nulls = Vec::with_capacity(col_count);
+        for i in 0 .. col_count {
+            let is_null = (data[i / 8] & (1 << (i % 8))) != 0;  // # is_null OK?
+            nulls.push(is_null);
+        }
+
+        let remain = &data[ (col_count + 7) /8 .. ];
+        for i in 0 .. col_count {
+            if nulls[i] {
+                values.push(ValueType::Null);
+                continue;
+            }
+
+            let (field_type, nullable, metadata1, metadata2) = self.field_types[i];
+            if let Some((value, offset)) = parse_field(field_type, nullable, metadata1, metadata2, remain) {
+                values.push(value);
+            }
+        }
+        (values, 0)
     }
 
     fn parse_current_fields_discriptors(&mut self, data: &Vec<u8>) {
