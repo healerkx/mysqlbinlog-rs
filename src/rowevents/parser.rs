@@ -256,7 +256,7 @@ impl Parser {
             }
 
             let (field_type, nullable, metadata1, metadata2) = self.field_types[i];
-            if let Some((value, offset)) = parse_field(field_type, nullable, metadata1, metadata2, remain) {
+            if let Ok((value, offset)) = parse_field(field_type, nullable, metadata1, metadata2, remain) {
                 values.push(value);
             }
         }

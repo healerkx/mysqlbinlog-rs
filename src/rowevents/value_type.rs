@@ -43,6 +43,7 @@ pub enum ValueType {
     Longlong(i64),
     Float(f32),
     Double(f64),
-    String(String)
+    String(String),
+    Datetime2(i64)
 
 }
