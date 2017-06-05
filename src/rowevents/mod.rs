@@ -7,3 +7,4 @@ pub mod events;
 pub mod value_type;
 pub mod descriptor;
 mod descriptor_datetime;
+mod descriptor_decimal;

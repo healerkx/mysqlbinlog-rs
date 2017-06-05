@@ -4,6 +4,7 @@ use std::io::Result;
 use rowevents::value_type::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use rowevents::descriptor_datetime::*;
+use rowevents::descriptor_decimal::*;
 
 
 fn parse_string(metadata1: u8, metadata2: u8, data: &[u8]) -> Result<(ValueType, usize)> {
@@ -65,7 +66,8 @@ pub fn parse_field(field_type: u8, nullable: bool, metadata1: u8, metadata2: u8,
         let (dt, offset) = parse_datetime2(metadata1, metadata2, data)?;
         (dt, offset)
     } else if field_type == FieldType::NewDecimal as u8 {
-        (ValueType::Null, 0)
+        let (dcm, offset) = parse_new_decimal(metadata1, metadata2, data)?;
+        (dcm, offset)
     } else if field_type == FieldType::Varchar as u8 {
         let (strval, offset) = parse_varchar(metadata1, metadata2, data)?;
         (strval, offset)

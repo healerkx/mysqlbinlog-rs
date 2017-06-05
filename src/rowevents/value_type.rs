@@ -45,6 +45,7 @@ pub enum ValueType {
     Float(f32),
     Double(f64),
     String(Vec<u8>),
-    Datetime2(i64)
+    Datetime2(i64),
+    Decimal(String)
 
 }
