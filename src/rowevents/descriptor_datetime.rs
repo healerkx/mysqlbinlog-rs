@@ -1,14 +1,16 @@
 
-use byteorder::{BigEndian, ReadBytesExt};
+use byteorder::{LittleEndian, BigEndian, ReadBytesExt};
 use std::io::Cursor;
 use std::io::Result;
 use rowevents::value_type::*;
 use chrono::{NaiveDateTime, NaiveDate};
 
 pub fn parse_datetime2(ms_precision: u8, metadata2: u8, data: &[u8]) -> Result<(ValueType, usize)> {
-    
+
     let mut cursor = Cursor::new(&data[0 .. 5]);
-    let t:i64 = cursor.read_int::<BigEndian>(5)? as i64 - 0x8000000000;
+    let t = cursor.read_uint::<BigEndian>(5)? as u64;
+    
+    let t:u64 = t - 0x8000000000;
 
     let (msec, offset) = if ms_precision == 1 || ms_precision == 2 {
         let mut cursor = Cursor::new(&data[5 .. 6]);
@@ -37,6 +39,9 @@ pub fn parse_datetime2(ms_precision: u8, metadata2: u8, data: &[u8]) -> Result<(
     let second = hms % (1 << 6);
     let minute = (hms >> 6) % (1 << 6);
     let hour = hms >> 12;
+
+    let msec = msec / 1000;
+    // println!("Ymd={}-{}-{} {}:{}:{}.{}", year, month, day, hour, minute, second, msec);
     let nd = NaiveDate::from_ymd(year as i32, month as u32, day as u32)
                         .and_hms_milli(hour as u32, minute as u32, second as u32, msec as u32);
 

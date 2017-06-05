@@ -169,7 +169,6 @@ impl Parser {
     }
 
     pub fn read_write_event(&mut self, eh: &EventHeader) -> Result<Event> {
-        println!("write");
         if let Ok((v, col_count)) = self.read_rows_event(eh, false) {
             let (values, _) = self.parse_row_values(&v, col_count);
             let e = InsertEvent::new(values);
@@ -181,17 +180,27 @@ impl Parser {
     }
 
     pub fn read_update_event(&mut self, eh: &EventHeader) -> Result<Event> {
-        println!("update");
-        self.read_rows_event(eh, true);
-        let e = UpdateEvent::new(vec![], vec![]);
-        Ok(Event::Update(e))
+        if let Ok((v, col_count)) = self.read_rows_event(eh, true) {
+            let (values1, offset) = self.parse_row_values(&v, col_count);
+            let (values2, _) = self.parse_row_values(&v[offset ..], col_count);
+            let e = UpdateEvent::new(values1, values2);
+            Ok(Event::Update(e))
+        } else {
+            let e = UpdateEvent::new(vec![], vec![]);
+            Ok(Event::Update(e))
+        }
+
     }
 
     pub fn read_delete_event(&mut self, eh: &EventHeader) -> Result<Event> {
-        println!("delete");
-        self.read_rows_event(eh, false);
-        let e = DeleteEvent::new(vec![]);
-        Ok(Event::Delete(e))
+        if let Ok((v, col_count)) = self.read_rows_event(eh, false) {
+            let (values, _) = self.parse_row_values(&v, col_count);
+            let e = DeleteEvent::new(values);
+            Ok(Event::Delete(e))
+        } else {
+            let e = DeleteEvent::new(vec![]);
+            Ok(Event::Delete(e))
+        }
     }
 
     pub fn read_rows_event(&mut self, eh: &EventHeader, is_update_event: bool) -> Result<(Vec<u8>, usize)> {
@@ -247,20 +256,27 @@ impl Parser {
             let is_null = (data[i / 8] & (1 << (i % 8))) != 0;  // # is_null OK?
             nulls.push(is_null);
         }
-
-        let remain = &data[ (col_count + 7) /8 .. ];
+        
+        let p = (col_count + 7) / 8;
+        let data = &data[ p .. ];
+        
+        let mut from = 0;
         for i in 0 .. col_count {
             if nulls[i] {
                 values.push(ValueType::Null);
                 continue;
             }
-
+            let remain = &data[from .. ];
+            
             let (field_type, nullable, metadata1, metadata2) = self.field_types[i];
             if let Ok((value, offset)) = parse_field(field_type, nullable, metadata1, metadata2, remain) {
                 values.push(value);
+                from += offset;
             }
+
         }
-        (values, 0)
+        
+        (values, p + from)
     }
 
     fn parse_current_fields_discriptors(&mut self, data: &Vec<u8>) {
@@ -286,13 +302,9 @@ impl Parser {
     }
 
     fn set_current_fields_discriptors(&mut self, col_types: &[u8], metadata: &[u8], nullable_bits: &[u8]) {
-        
-        println!("{:?}", col_types);
-        println!("{:?}", metadata);
-        println!("{:?}", nullable_bits);
+        self.field_types.clear();
         
         let col_count = col_types.len();
-        //print!("!!!{:?}", col_count);
         let mut nullable_list = Vec::with_capacity(col_count);
         
         for i in 0 .. col_count {
@@ -310,8 +322,8 @@ impl Parser {
             let col_type = *col_type;
             let nullable = nullable_list[i];
             if col_type == FieldType::VarString as u8 || 
-               col_type == FieldType::String  as u8 {
-                //parse_type_length(md)
+               col_type == FieldType::String as u8 {
+                //parse_type_length(md) // TODO:!
                 metadata1 = md[0];
                 metadata2 = md[1];
                 slice_begin += 2;
@@ -322,6 +334,10 @@ impl Parser {
                 metadata1 = md[0];
                 metadata2 = md[1];
                 slice_begin += 2;
+            } else if col_type == FieldType::Varchar as u8 {
+                metadata1 = md[0];
+                metadata2 = md[1];
+                slice_begin += 2;                
             }
             
             i += 1;

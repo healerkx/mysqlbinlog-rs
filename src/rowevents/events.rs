@@ -53,14 +53,17 @@ pub struct TableMapEvent {
 
 }
 
+#[derive(Debug)]
 pub struct DeleteEvent {
     entry: Vec<ValueType>
 }
 
+#[derive(Debug)]
 pub struct InsertEvent {
     entry: Vec<ValueType>
 }
 
+#[derive(Debug)]
 pub struct UpdateEvent {
     entry1: Vec<ValueType>,
     entry2: Vec<ValueType>

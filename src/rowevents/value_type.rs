@@ -34,6 +34,7 @@ pub enum FieldType {
     Geometry = 255
 }
 
+#[derive(Debug)]
 pub enum ValueType {
     Unknown,
     Null,
@@ -43,7 +44,7 @@ pub enum ValueType {
     Longlong(i64),
     Float(f32),
     Double(f64),
-    String(String),
+    String(Vec<u8>),
     Datetime2(i64)
 
 }
