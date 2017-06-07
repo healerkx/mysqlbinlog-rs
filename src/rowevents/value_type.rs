@@ -47,5 +47,4 @@ pub enum ValueType {
     String(Vec<u8>),
     Datetime2(i64),
     Decimal(String)
-
 }

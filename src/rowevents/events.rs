@@ -24,7 +24,7 @@ pub const TABLE_MAP_EVENT: i8  = 19;
 pub const PRE_GA_WRITE_ROWS_EVENT: i8  = 20;
 pub const PRE_GA_UPDATE_ROWS_EVENT: i8  = 21;
 pub const PRE_GA_DELETE_ROWS_EVENT: i8  = 22;
-    
+
 // From MySQL 5.1.18 events
 pub const WRITE_ROWS_EVENT: i8    = 23;
 pub const UPDATE_ROWS_EVENT: i8    = 24;

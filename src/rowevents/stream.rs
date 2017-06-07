@@ -1,11 +1,10 @@
 
 
-
-
 use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
 use std::option::Option;
+use std::process;
 
 pub struct Stream {
     file: File,
@@ -31,6 +30,10 @@ impl Stream {
     pub fn read(&mut self, size: usize) -> &[u8] {
         let from = self.offset;
         self.offset += size;
+        if from >= self.content.len() {
+            println!("Reach the end of this binlog file");
+            process::exit(0x0000);
+        }
         // println!("({:?},{}, {:?})", from, size, &self.content[from .. from + size]);
         &self.content[from .. from + size]
     }

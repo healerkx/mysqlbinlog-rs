@@ -7,7 +7,7 @@ use mysqlbinlog::rowevents::events::Event;
 fn main() {
     let reader = reader::Reader::new("/Users/healer/data.log");
     if let Ok(mut r) = reader {
-        println!("{:?}", 1);
+        
         while let Ok(e1) = r.read_event_header() {
             println!("-------------------------------------------");
             println!("{}", e1.get_time());
