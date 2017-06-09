@@ -181,9 +181,20 @@ impl Parser {
 
     pub fn read_update_event(&mut self, eh: &EventHeader) -> Result<Event> {
         if let Ok((v, col_count)) = self.read_rows_event(eh, true) {
-            let (values1, offset) = self.parse_row_values(&v, col_count);
-            let (values2, _) = self.parse_row_values(&v[offset ..], col_count);
-            let e = UpdateEvent::new(values1, values2);
+            let mut from:usize = 0;
+            let len = v.len();
+            let offset = 0;
+            let mut rows_before = vec![];
+            let mut rows_after = vec![];
+            while from < len {
+                let (values1, offset) = self.parse_row_values(&v[from ..], col_count);
+                rows_before.push(values1);
+                from += offset;
+                let (values2, offset) = self.parse_row_values(&v[from ..], col_count);
+                rows_after.push(values2);
+                from += offset;
+            }
+            let e = UpdateEvent::new(rows_before, rows_after);
             Ok(Event::Update(e))
         } else {
             let e = UpdateEvent::new(vec![], vec![]);

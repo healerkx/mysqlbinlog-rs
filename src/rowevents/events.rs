@@ -65,8 +65,8 @@ pub struct InsertEvent {
 
 #[derive(Debug)]
 pub struct UpdateEvent {
-    entry1: Vec<ValueType>,
-    entry2: Vec<ValueType>
+    entry1: Vec<Vec<ValueType>>,
+    entry2: Vec<Vec<ValueType>>
 }
 
 impl FormatDescriptorEvent {
@@ -94,7 +94,7 @@ impl InsertEvent {
 }
 
 impl UpdateEvent {
-    pub fn new(entry1: Vec<ValueType>, entry2: Vec<ValueType>) -> UpdateEvent {
+    pub fn new(entry1: Vec<Vec<ValueType>>, entry2: Vec<Vec<ValueType>>) -> UpdateEvent {
          UpdateEvent{entry1: entry1, entry2: entry2}
     }
 }
