@@ -5,7 +5,7 @@ use mysqlbinlog::rowevents::reader;
 use mysqlbinlog::rowevents::events::Event;
 
 fn main() {
-    let reader = reader::Reader::new("/Users/healer/multi.log");
+    let reader = reader::Reader::new("/Users/healer/data.log");
     if let Ok(mut r) = reader {
         
         while let Ok(e1) = r.read_event_header() {

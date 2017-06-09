@@ -194,8 +194,16 @@ impl Parser {
 
     pub fn read_delete_event(&mut self, eh: &EventHeader) -> Result<Event> {
         if let Ok((v, col_count)) = self.read_rows_event(eh, false) {
-            let (values, _) = self.parse_row_values(&v, col_count);
-            let e = DeleteEvent::new(values);
+            let mut from:usize = 0;
+            let len = v.len();
+            let offset = 0;
+            let mut rows = vec![];
+            while from < len {
+                let (v, offset) = self.parse_row_values(&v[from ..], col_count);
+                from += offset;
+                rows.push(v);
+            }
+            let e = DeleteEvent::new(rows);
             Ok(Event::Delete(e))
         } else {
             let e = DeleteEvent::new(vec![]);
@@ -250,6 +258,7 @@ impl Parser {
     }
 
     fn parse_row_values(&self, data: &[u8], col_count: usize) -> (Vec<ValueType>, usize) {
+        
         let mut values = Vec::with_capacity(col_count);
         let mut nulls = Vec::with_capacity(col_count);
         for i in 0 .. col_count {
