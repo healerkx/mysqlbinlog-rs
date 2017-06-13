@@ -170,8 +170,16 @@ impl Parser {
 
     pub fn read_write_event(&mut self, eh: &EventHeader) -> Result<Event> {
         if let Ok((v, col_count)) = self.read_rows_event(eh, false) {
-            let (values, _) = self.parse_row_values(&v, col_count);
-            let e = InsertEvent::new(values);
+            let mut from:usize = 0;
+            let len = v.len();
+            let offset = 0;
+            let mut rows = vec![];
+            while from < len {
+                let (values, offset) = self.parse_row_values(&v[from..], col_count);
+                from += offset;
+                rows.push(values);
+            }
+            let e = InsertEvent::new(rows);
             Ok(Event::Insert(e))
         } else {
             let e = InsertEvent::new(vec![]);

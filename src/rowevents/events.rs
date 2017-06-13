@@ -60,7 +60,7 @@ pub struct DeleteEvent {
 
 #[derive(Debug)]
 pub struct InsertEvent {
-    entry: Vec<ValueType>
+    entry: Vec<Vec<ValueType>>
 }
 
 #[derive(Debug)]
@@ -88,7 +88,7 @@ impl TableMapEvent {
 }
 
 impl InsertEvent {
-    pub fn new(entry: Vec<ValueType>) -> InsertEvent {
+    pub fn new(entry: Vec<Vec<ValueType>>) -> InsertEvent {
          InsertEvent{entry: entry}
     }
 }
