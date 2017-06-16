@@ -8,7 +8,8 @@ use std::io::{Error, ErrorKind};
 
 pub struct Reader {
     filename: String,
-    parser: Parser
+    parser: Parser,
+    skip_next_event: bool
 }
 
 impl Reader {
@@ -19,9 +20,46 @@ impl Reader {
             let mut parser = Parser::new(stream);
             parser.read_binlog_file_header();
             Ok(Reader{
-                filename: filename.to_string(),  
-                parser: parser
+                filename: filename.to_string(),
+                parser: parser,
+                skip_next_event: false
                 })
+        } else {
+            Err(Error::new(ErrorKind::Other, "oh no!"))
+        }
+    }
+
+    pub fn is_concerned_event(&mut self, eh: &EventHeader) -> bool  {
+        true
+    }
+
+    pub fn read_event(&mut self) -> Result<(EventHeader, Event)> {
+        if let Ok(eh) = self.read_event_header() {
+            if self.skip_next_event || !self.is_concerned_event(&eh) {
+                
+                if let Ok(e) = self.read_unknown_event(&eh) {
+                    // Recover from skip
+                    self.set_skip_next_event(false);
+                    Ok((eh, e))
+                } else {
+                    Err(Error::new(ErrorKind::Other, "oh no!"))
+                }
+            } else if let Ok(e) = self.read_event_detail(&eh) {
+                match e {
+                    // Event::Xid(e) => println!("{:?}", e),
+                    Event::TableMap(ref e) => {
+                        if e.table_name == "table_2" {
+                            println!("{}={}", e.table_name.len(), e.table_name);
+                            self.set_skip_next_event(true);
+                        }
+                    },
+                    _ => ()
+                }
+                Ok((eh, e))
+                
+            } else {
+                Err(Error::new(ErrorKind::Other, "oh no!"))
+            }
         } else {
             Err(Error::new(ErrorKind::Other, "oh no!"))
         }
@@ -31,7 +69,7 @@ impl Reader {
         self.parser.read_event_header()
     }
 
-    pub fn read_event(&mut self, eh: &EventHeader) -> Result<Event> {
+    pub fn read_event_detail(&mut self, eh: &EventHeader) -> Result<Event> {
         
         match eh.get_event_type() {
             QUERY_EVENT => self.parser.read_query_event(eh),
@@ -53,6 +91,14 @@ impl Reader {
 
             _ => self.parser.read_unknown_event(eh)
         }
+    }
+
+    pub fn read_unknown_event(&mut self, eh: &EventHeader) -> Result<Event> {
+        self.parser.read_unknown_event(eh)
+    }
+
+    pub fn set_skip_next_event(&mut self, skip: bool) {
+        self.skip_next_event = skip;
     }
 }
 

@@ -134,22 +134,23 @@ impl Parser {
         }
 
         let db_name = {
-            let db_name_data = self.stream.read(db_name_len as usize + 1);
+            let db_name_data = self.stream.read(db_name_len as usize);
             String::from_utf8_lossy(db_name_data).into_owned()
         };
+        self.stream.read(1);    // Read more 1 byte(This byte is for zero-ending?)
 
         {
             let table_name_len_data = self.stream.read(1);
             let mut cursor = Cursor::new(&table_name_len_data);
             table_name_len = cursor.read_i8()?  as usize
         }
-
+        
         let table_name = {
-            let table_name_data = self.stream.read(table_name_len as usize + 1);
+            let table_name_data = self.stream.read(table_name_len as usize);
             String::from_utf8_lossy(table_name_data).into_owned()
         };
 
-        println!("{}.{}", db_name, table_name);
+        self.stream.read(1);    // Read more 1 byte(This byte is for zero-ending?)
 
         let data_len = eh.get_event_len() - 19 - 16 - db_name_len - table_name_len + 4;
         let content = {
@@ -161,7 +162,7 @@ impl Parser {
             self.parse_current_fields_discriptors(&content);
         }
 
-        Ok(Event::TableMap(TableMapEvent{}))
+        Ok(Event::TableMap(TableMapEvent::new(db_name, table_name)))
     }
 
     pub fn read_query_event(&mut self, eh: &EventHeader) -> Result<Event> {

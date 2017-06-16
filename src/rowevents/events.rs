@@ -50,7 +50,8 @@ pub struct XidEvent {
 
 #[derive(Debug)]
 pub struct TableMapEvent {
-
+    pub db_name: String,
+    pub table_name: String
 }
 
 #[derive(Debug)]
@@ -82,9 +83,9 @@ impl XidEvent {
 }
 
 impl TableMapEvent {
-    pub fn new() -> TableMapEvent {
-         TableMapEvent{}
-    }  
+    pub fn new(db_name: String, table_name: String) -> TableMapEvent {
+         TableMapEvent{ db_name: db_name, table_name: table_name }
+    }
 }
 
 impl InsertEvent {
