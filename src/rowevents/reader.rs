@@ -9,7 +9,8 @@ use std::io::{Error, ErrorKind};
 pub struct Reader {
     filename: String,
     parser: Parser,
-    skip_next_event: bool
+    skip_next_event: bool,
+    concerned_events: Vec<i8>
 }
 
 impl Reader {
@@ -22,20 +23,27 @@ impl Reader {
             Ok(Reader{
                 filename: filename.to_string(),
                 parser: parser,
-                skip_next_event: false
-                })
+                skip_next_event: false,
+                concerned_events: Vec::with_capacity(20)
+            })
         } else {
             Err(Error::new(ErrorKind::Other, "oh no!"))
         }
     }
+    
+    #[inline]
+    pub fn add_concerned_event(&mut self, event_type: i8) {
+        self.concerned_events.push(event_type);
+    }
 
-    pub fn is_concerned_event(&mut self, eh: &EventHeader) -> bool  {
-        true
+    #[inline]
+    pub fn is_concerned_event(&mut self, event_type: i8) -> bool  {
+        self.concerned_events.len() == 0 || self.concerned_events.contains(&event_type)
     }
 
     pub fn read_event(&mut self) -> Result<(EventHeader, Event)> {
         if let Ok(eh) = self.read_event_header() {
-            if self.skip_next_event || !self.is_concerned_event(&eh) {
+            if self.skip_next_event || !self.is_concerned_event(eh.get_event_type()) {
                 
                 if let Ok(e) = self.read_unknown_event(&eh) {
                     // Recover from skip
@@ -48,7 +56,7 @@ impl Reader {
                 match e {
                     // Event::Xid(e) => println!("{:?}", e),
                     Event::TableMap(ref e) => {
-                        if e.table_name == "table_2" {
+                        if e.table_name != "table_2" {
                             println!("{}={}", e.table_name.len(), e.table_name);
                             self.set_skip_next_event(true);
                         }
@@ -65,6 +73,7 @@ impl Reader {
         }
     }
 
+    #[inline]
     pub fn read_event_header(&mut self) -> Result<EventHeader> {
         self.parser.read_event_header()
     }
@@ -103,11 +112,14 @@ impl Reader {
 }
 
 impl Iterator for Reader {
-    type Item = usize;
+    type Item = (EventHeader, Event);
 
     // next() is the only required method
-    fn next(&mut self) -> Option<usize> {
-        // increment our count. This is why we started at zero.
-        Some(0)
+    fn next(&mut self) -> Option<(EventHeader, Event)> {
+        if let Ok((eh, e)) = self.read_event() {
+            Some((eh, e))
+        } else {
+            None
+        }
     }
 }

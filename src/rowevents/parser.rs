@@ -302,7 +302,6 @@ impl Parser {
                 values.push(value);
                 from += offset;
             }
-
         }
         
         (values, p + from)

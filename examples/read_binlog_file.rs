@@ -9,7 +9,9 @@ fn main() {
     let reader = reader::Reader::new("/Users/healer/multi.log");
     if let Ok(mut r) = reader {
         
-        while let Ok((eh, e)) = r.read_event() {
+        
+
+        while let Some((eh, e)) = r.next() {
             print!("[{}] ", eh.get_time());
             
             match e {
