@@ -56,7 +56,7 @@ impl Reader {
                 match e {
                     // Event::Xid(e) => println!("{:?}", e),
                     Event::TableMap(ref e) => {
-                        if e.table_name != "table_2" {
+                        if e.table_name == "table_2" {
                             println!("{}={}", e.table_name.len(), e.table_name);
                             self.set_skip_next_event(true);
                         }

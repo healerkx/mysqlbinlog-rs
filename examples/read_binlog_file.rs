@@ -3,10 +3,9 @@ extern crate mysqlbinlog;
 
 use mysqlbinlog::rowevents::reader;
 use mysqlbinlog::rowevents::events::Event;
-use std::io::Result;
 
 fn main() {
-    let reader = reader::Reader::new("/Users/healer/multi.log");
+    let reader = reader::Reader::new("/Users/healer/mysql_binlog.000002");
     if let Ok(mut r) = reader {
         
         

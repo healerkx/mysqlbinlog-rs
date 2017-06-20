@@ -38,16 +38,29 @@ pub fn parse_new_decimal(precision: u8, decimals: u8, data: &[u8]) -> Result<(Va
         (negative, mask)
     };
 
+    if (negative) {
+        print!("??");
+    }
+    
+
     let size = compressed_bytes[comp_integral as usize];
 
     let mut d = if size > 0 {
         let mut cursor = Cursor::new(&data);
         let i:u64 = cursor.read_uint::<BigEndian>(size)?;
         let a = i ^ mask;
+        // Handle u64 value XOR mask in different bits, for example: 24bit int
+        let move_bits = 64 - size * 8;
+        let a = a << move_bits >> move_bits;
         a.to_string()
     } else {
         "".to_string()
     };
+
+    if negative {
+        d = "-".to_string() + &d;
+    }
+
     let mut from:usize = size;
     let remain = &data[from .. ];
 
@@ -76,9 +89,12 @@ pub fn parse_new_decimal(precision: u8, decimals: u8, data: &[u8]) -> Result<(Va
     if size > 0 {
         let i = Cursor::new(remain).read_uint::<BigEndian>(size)? as u64;
         let value = i ^ mask;
+        // Handle u64 value XOR mask in different bits, for example: 24bit int
+        let move_bits = 64 - size * 8;
+        let value = value << move_bits >> move_bits;
         d += &format!("{:0w$}", value, w=comp_fractional as usize);
         from += size;
     }
-    // println!("{}", d);
+
     Ok((ValueType::Decimal(d), from))
 }

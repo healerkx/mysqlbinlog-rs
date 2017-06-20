@@ -18,10 +18,7 @@ impl Stream {
     pub fn from_file(filename: &str) -> Option<Stream> {
         let mut result = File::open(filename);
         if let Ok(mut file) = result {
-
             Some(Stream {file: file, content: vec![], offset: 0})
-            
-            
         } else {
             None
         }
@@ -33,17 +30,19 @@ impl Stream {
 
         if from + size >= self.content.len() {
             match self.read_file(size) {
-                Ok(0) => {             
+                Ok(0) => {
+                    // TODO: Wait or Quit?    
                     println!("Reach the end of this binlog file");
                     process::exit(0x0000);
                 },
-                _ => {} 
+                _ => {}
             }
         }
         
         &self.content[from .. from + size]
     }
 
+    // try! Read size * 2 bytes from file
     pub fn read_file(&mut self, size: usize) -> Result<usize> {
         let mut buffer = Vec::with_capacity(size * 2);
         buffer.resize(size * 2, 0);
