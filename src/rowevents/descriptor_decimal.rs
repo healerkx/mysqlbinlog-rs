@@ -38,11 +38,6 @@ pub fn parse_new_decimal(precision: u8, decimals: u8, data: &[u8]) -> Result<(Va
         (negative, mask)
     };
 
-    if (negative) {
-        print!("??");
-    }
-    
-
     let size = compressed_bytes[comp_integral as usize];
 
     let mut d = if size > 0 {

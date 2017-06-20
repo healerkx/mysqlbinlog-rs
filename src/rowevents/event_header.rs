@@ -21,7 +21,6 @@ impl EventHeader {
             event_len: event_len,
             next_pos: next_pos,
             flags: flags
-
         }
     }
 

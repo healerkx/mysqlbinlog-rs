@@ -7,9 +7,8 @@ use mysqlbinlog::rowevents::events::Event;
 fn main() {
     let reader = reader::Reader::new("/Users/healer/mysql_binlog.000002");
     if let Ok(mut r) = reader {
+        r.add_excluded_db_name("antares".to_string());
         
-        
-
         while let Some((eh, e)) = r.next() {
             print!("[{}] ", eh.get_time());
             

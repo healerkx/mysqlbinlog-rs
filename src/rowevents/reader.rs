@@ -10,7 +10,9 @@ pub struct Reader {
     filename: String,
     parser: Parser,
     skip_next_event: bool,
-    concerned_events: Vec<i8>
+    concerned_events: Vec<i8>,
+    excluded_db_list: Vec<String>,
+    excluded_table_list: Vec<String>,
 }
 
 impl Reader {
@@ -24,7 +26,9 @@ impl Reader {
                 filename: filename.to_string(),
                 parser: parser,
                 skip_next_event: false,
-                concerned_events: Vec::with_capacity(20)
+                concerned_events: Vec::with_capacity(20),
+                excluded_db_list: Vec::with_capacity(20),
+                excluded_table_list: Vec::with_capacity(20),
             })
         } else {
             Err(Error::new(ErrorKind::Other, "oh no!"))
@@ -41,6 +45,19 @@ impl Reader {
         self.concerned_events.len() == 0 || self.concerned_events.contains(&event_type)
     }
 
+    pub fn add_excluded_db_name(&mut self, db_name: String) {
+        self.excluded_db_list.push(db_name);
+    }
+
+    pub fn add_excluded_table_name(&mut self, table_name: String) {
+        self.excluded_table_list.push(table_name);
+    }
+
+    pub fn is_excluded(&mut self, db_name: &String, table_name: &String) -> bool {
+        (self.excluded_db_list.len() > 0 && self.excluded_db_list.contains(&db_name)) ||
+        (self.excluded_table_list.len() > 0 && self.excluded_table_list.contains(&table_name))
+    }
+
     pub fn read_event(&mut self) -> Result<(EventHeader, Event)> {
         if let Ok(eh) = self.read_event_header() {
             if self.skip_next_event || !self.is_concerned_event(eh.get_event_type()) {
@@ -54,10 +71,9 @@ impl Reader {
                 }
             } else if let Ok(e) = self.read_event_detail(&eh) {
                 match e {
-                    // Event::Xid(e) => println!("{:?}", e),
                     Event::TableMap(ref e) => {
-                        if e.table_name == "table_2" {
-                            println!("{}={}", e.table_name.len(), e.table_name);
+                        if self.is_excluded(&e.db_name, &e.table_name) {
+                            println!("Excluded {}.{}", e.db_name, e.table_name);
                             self.set_skip_next_event(true);
                         }
                     },
