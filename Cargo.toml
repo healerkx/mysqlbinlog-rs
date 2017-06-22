@@ -7,3 +7,9 @@ authors = ["healer_kx <healer.kx.yu@gmail.com>"]
 byteorder = "1.0.0"
 time = "0.1"
 chrono = "0.3"
+regex = "0.2"
+
+[dev-dependencies]
+toml = "0.4.1"
+serde = "1.0"
+serde_derive = "1.0"

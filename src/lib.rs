@@ -17,3 +17,4 @@ pub mod rowevents;
 
 extern crate byteorder;
 extern crate chrono;
+extern crate regex;

@@ -5,14 +5,15 @@ use rowevents::event_header::EventHeader;
 use rowevents::events::*;
 use std::io::Result;
 use std::io::{Error, ErrorKind};
+extern crate regex;
+use regex::Regex;
 
 pub struct Reader {
     filename: String,
     parser: Parser,
     skip_next_event: bool,
     concerned_events: Vec<i8>,
-    excluded_db_list: Vec<String>,
-    excluded_table_list: Vec<String>,
+    excluded_db_table_list: Vec<Regex>,
 }
 
 impl Reader {
@@ -27,8 +28,7 @@ impl Reader {
                 parser: parser,
                 skip_next_event: false,
                 concerned_events: Vec::with_capacity(20),
-                excluded_db_list: Vec::with_capacity(20),
-                excluded_table_list: Vec::with_capacity(20),
+                excluded_db_table_list: Vec::with_capacity(20),
             })
         } else {
             Err(Error::new(ErrorKind::Other, "oh no!"))
@@ -45,17 +45,20 @@ impl Reader {
         self.concerned_events.len() == 0 || self.concerned_events.contains(&event_type)
     }
 
-    pub fn add_excluded_db_name(&mut self, db_name: String) {
-        self.excluded_db_list.push(db_name);
+    pub fn add_excluded_db_table(&mut self, db_table_name: &str) {
+        let regexp = db_table_name.replace(".", "\\.");
+        let regexp = regexp.replace("*", "\\w*");
+        self.excluded_db_table_list.push(Regex::new(&regexp).unwrap());
     }
 
-    pub fn add_excluded_table_name(&mut self, table_name: String) {
-        self.excluded_table_list.push(table_name);
-    }
-
-    pub fn is_excluded(&mut self, db_name: &String, table_name: &String) -> bool {
-        (self.excluded_db_list.len() > 0 && self.excluded_db_list.contains(&db_name)) ||
-        (self.excluded_table_list.len() > 0 && self.excluded_table_list.contains(&table_name))
+    pub fn is_excluded(&mut self, db_name: &str, table_name: &str) -> bool {
+        let db_table_name = db_name.to_string() + "." + table_name;
+        for ref re in self.excluded_db_table_list.iter() {
+            if re.is_match(&db_table_name) {
+                return true;
+            }
+        }
+        return false;
     }
 
     pub fn read_event(&mut self) -> Result<(EventHeader, Event)> {
@@ -79,6 +82,7 @@ impl Reader {
                     },
                     _ => ()
                 }
+
                 Ok((eh, e))
                 
             } else {
@@ -124,6 +128,11 @@ impl Reader {
 
     pub fn set_skip_next_event(&mut self, skip: bool) {
         self.skip_next_event = skip;
+    }
+
+    #[inline]
+    pub fn skip_next_event(&self) -> bool {
+        self.skip_next_event
     }
 }
 

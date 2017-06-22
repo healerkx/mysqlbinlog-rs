@@ -38,7 +38,7 @@ pub const WRITE_ROWS_EVENT2: i8 = 30;
 pub const UPDATE_ROWS_EVENT2: i8 = 31;
 pub const DELETE_ROWS_EVENT2: i8 = 32;
 
-
+#[derive(Debug)]
 pub struct FormatDescriptorEvent {
 
 }
@@ -106,7 +106,7 @@ impl DeleteEvent {
     }
 }
 
-
+#[derive(Debug)]
 pub enum Event {
     Unknown,
     FormatDescriptor(FormatDescriptorEvent),
