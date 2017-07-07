@@ -70,6 +70,10 @@ pub struct UpdateEvent {
     entry2: Vec<Vec<ValueType>>
 }
 
+#[derive(Debug)]
+pub struct RotateEvent {
+}
+
 impl FormatDescriptorEvent {
     pub fn new() -> FormatDescriptorEvent {
          FormatDescriptorEvent{}
@@ -106,11 +110,18 @@ impl DeleteEvent {
     }
 }
 
+impl RotateEvent {
+    pub fn new() -> RotateEvent {
+         RotateEvent{}
+    }
+}
+
 #[derive(Debug)]
 pub enum Event {
     Unknown,
     FormatDescriptor(FormatDescriptorEvent),
     Xid(XidEvent),
+    Rotate(RotateEvent),
     TableMap(TableMapEvent),
     Delete(DeleteEvent),
     Insert(InsertEvent),

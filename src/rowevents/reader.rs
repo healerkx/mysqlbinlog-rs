@@ -34,6 +34,11 @@ impl Reader {
             Err(Error::new(ErrorKind::Other, "oh no!"))
         }
     }
+
+    pub fn open_next_binlog_file(&mut self) -> bool {
+        self.parser.read_next_binlog_file();
+        self.parser.read_binlog_file_header()
+    }
     
     #[inline]
     pub fn add_concerned_event(&mut self, event_type: i8) {
@@ -76,9 +81,14 @@ impl Reader {
                 match e {
                     Event::TableMap(ref e) => {
                         if self.is_excluded(&e.db_name, &e.table_name) {
-                            println!("Excluded {}.{}", e.db_name, e.table_name);
+                            // println!("Excluded {}.{}", e.db_name, e.table_name);
                             self.set_skip_next_event(true);
                         }
+                    },
+
+                    Event::Rotate(ref e) => {
+                        println!("");
+                        self.open_next_binlog_file();
                     },
                     _ => ()
                 }

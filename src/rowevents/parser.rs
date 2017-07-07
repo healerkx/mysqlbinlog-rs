@@ -70,6 +70,11 @@ impl Parser {
         true
     }
 
+    pub fn read_next_binlog_file(&mut self) -> bool {
+        self.stream.read_next_binlog_file();
+        true
+    }
+
     pub fn read_event_header(&mut self) -> Result<EventHeader> {
     
         let data = self.stream.read(19);
@@ -99,7 +104,7 @@ impl Parser {
     }
 
     pub fn read_rotate_event(&mut self, eh: &EventHeader) -> Result<Event> {
-        self.read_unknown_event(eh)
+        Ok(Event::Rotate(RotateEvent::new()))
     }
 
     pub fn read_format_descriptor_event(&mut self, eh: &EventHeader) -> Result<Event> {
