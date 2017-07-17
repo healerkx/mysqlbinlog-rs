@@ -4,12 +4,14 @@ from mysqlbinlog import *
 import platform
 
 def main():
-    r = BinLogReader('/Users/healer/mysql_binlog.000001')
+    reader = BinLogReader('/Users/healer/mysql_binlog.000001')
     
-    h = r.read_event_header()
-    print("#", h.contents.server_id, h.contents.timestamp)
+    
+    h = reader.read_event_header()
+    
+    reader.read_event(h)
+    reader.close()
 
-    del(r)
 
 if __name__ == '__main__':
     print(platform.architecture())
