@@ -57,3 +57,30 @@ pub extern fn binlog_reader_read_event_header(ptr: *mut Reader) -> *mut EventHea
         ptr::null_mut()
     }
 }
+
+#[no_mangle]
+pub extern fn binlog_reader_read_event(ptr: *mut Reader, header: *mut EventHeader) -> *mut Event {
+    let mut reader = unsafe {
+        assert!(!ptr.is_null());
+        &mut *ptr
+    };
+
+    let header = unsafe {
+        assert!(!header.is_null());
+        &mut *header
+    };
+    
+    if let Ok(event) = reader.read_event_detail(&header) {
+        Box::into_raw(Box::new(event))
+    } else {
+        ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub extern fn binlog_reader_parse_event(event: *mut Event) {
+    let event = unsafe {
+        assert!(!header.is_null());
+        &mut *event
+    };
+}

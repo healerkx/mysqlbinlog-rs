@@ -76,6 +76,11 @@ class BinLogReader:
         return header
 
     def read_event(self, header):
+        self.d.binlog_reader_read_event.restype = c_void_p
+        self.d.binlog_reader_read_event.argtypes = [c_void_p, POINTER(StructPointer)]
+        self.d.binlog_reader_read_event(self.reader, header)
+        print("Unknown event type")
+        # TODO: Parse
         event_type = header.contents.type_code
         if event_type == EventType.WRITE_ROWS_EVENT2:
             pass
@@ -92,6 +97,6 @@ class BinLogReader:
         elif event_type == EventType.STOP_EVENT:
             pass                                             
         elif event_type == EventType.UNKNOWN_EVENT:
-            print("Unknown event type")
+            pass
         else:
             pass
