@@ -3,6 +3,7 @@ use chrono::{NaiveDateTime, NaiveDate};
 
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct EventHeader {
     timestamp: i32, 
     type_code: i8,

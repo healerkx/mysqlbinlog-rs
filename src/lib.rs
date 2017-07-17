@@ -20,31 +20,40 @@ use std::ptr;
 
 #[no_mangle]
 pub extern fn binlog_reader_new(filename: *const c_char) -> *mut Reader {
-    let c = unsafe {    
+    let c = unsafe {
         let cstr = CStr::from_ptr(filename);
         cstr.to_string_lossy().into_owned()
     };
+    
     if let Ok(reader) = Reader::new(&c) {
-        Box::into_raw(Box::new(reader))
+        let p = Box::into_raw(Box::new(reader));
+        println!("{:?}", p);
+        p
     } else {
         ptr::null_mut()
     }
 }
 
 #[no_mangle]
-pub extern fn binlog_reader_free(reader: *mut Reader) {
-    if reader.is_null() { 
+pub extern fn binlog_reader_free(ptr: *mut Reader) {
+    if ptr.is_null() {
         return 
     }
     unsafe { 
-        Box::from_raw(reader); 
+        Box::from_raw(ptr);
     }
 }
 
 #[no_mangle]
-pub extern fn binlog_reader_read_event(reader: *mut Reader) {
-    if reader.is_null() {
-        return 
-    }
+pub extern fn binlog_reader_read_event_header(ptr: *mut Reader) -> *mut EventHeader {
+    let mut reader = unsafe {
+        assert!(!ptr.is_null());
+        &mut *ptr
+    };
     
+    if let Ok(header) = reader.read_event_header() {
+        Box::into_raw(Box::new(header))
+    } else {
+        ptr::null_mut()
+    }
 }
