@@ -5,12 +5,12 @@ use chrono::{NaiveDateTime, NaiveDate};
 #[derive(Debug)]
 #[repr(C)]
 pub struct EventHeader {
-    timestamp: i32, 
-    type_code: i8,
-    server_id: i32, 
-    event_len: i32, 
-    next_pos: i32, 
-    flags: i16
+    pub timestamp: i32, 
+    pub type_code: i8,
+    pub server_id: i32, 
+    pub event_len: i32, 
+    pub next_pos: i32, 
+    pub flags: i16
 }
 
 impl EventHeader {

@@ -45,16 +45,25 @@ pub extern fn binlog_reader_free(ptr: *mut Reader) {
 }
 
 #[no_mangle]
-pub extern fn binlog_reader_read_event_header(ptr: *mut Reader) -> *mut EventHeader {
+pub extern fn binlog_reader_read_event_header(ptr: *mut Reader, header_ref: *mut EventHeader) -> bool {
     let mut reader = unsafe {
         assert!(!ptr.is_null());
         &mut *ptr
     };
     
-    if let Ok(header) = reader.read_event_header() {
-        Box::into_raw(Box::new(header))
+    if let Ok(ref mut header) = reader.read_event_header() {
+        // Copy for avoid alloc too much heap-memory
+        unsafe {
+            header_ref.type_code = header.type_code;
+            header_ref.timestamp = header.timestamp;
+            header_ref.server_id = header.server_id;
+            header_ref.event_len = header.event_len;
+            header_ref.next_pos = header.next_pos;
+            header_ref.flags = header.flags
+        }
+        true
     } else {
-        ptr::null_mut()
+        false
     }
 }
 
@@ -77,10 +86,11 @@ pub extern fn binlog_reader_read_event(ptr: *mut Reader, header: *mut EventHeade
     }
 }
 
+
 #[no_mangle]
 pub extern fn binlog_reader_parse_event(event: *mut Event) {
     let event = unsafe {
-        assert!(!header.is_null());
+        assert!(!event.is_null());
         &mut *event
     };
 }

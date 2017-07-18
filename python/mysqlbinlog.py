@@ -46,7 +46,7 @@ class EventType:
     # ----------------------------------
 
 
-class StructPointer(Structure):
+class EventHeader(Structure):
     _fields_ = [
         ("timestamp", c_int),
         ("type_code", c_byte),
@@ -65,23 +65,24 @@ class BinLogReader:
         self.d.binlog_reader_new.restype = c_void_p
         self.reader = self.d.binlog_reader_new(bytes(filename, 'utf8'))
 
+
     def close(self):
         self.d.binlog_reader_free.argtypes = [c_void_p]
         self.d.binlog_reader_free(self.reader)
 
-    def read_event_header(self):
-        self.d.binlog_reader_read_event_header.restype = POINTER(StructPointer)
-        self.d.binlog_reader_read_event_header.argtypes = [c_void_p]
-        header = self.d.binlog_reader_read_event_header(self.reader)
-        return header
+    def read_event_header(self, header):
+        self.d.binlog_reader_read_event_header.restype = c_byte
+        self.d.binlog_reader_read_event_header.argtypes = [c_void_p, POINTER(EventHeader)]
+        b = self.d.binlog_reader_read_event_header(self.reader, byref(header))
+        return b
 
     def read_event(self, header):
         self.d.binlog_reader_read_event.restype = c_void_p
-        self.d.binlog_reader_read_event.argtypes = [c_void_p, POINTER(StructPointer)]
-        self.d.binlog_reader_read_event(self.reader, header)
-        print("Unknown event type")
-        # TODO: Parse
-        event_type = header.contents.type_code
+        self.d.binlog_reader_read_event.argtypes = [c_void_p, POINTER(EventHeader)]
+        self.d.binlog_reader_read_event(self.reader, byref(header))
+        # print("Unknown event type")
+        
+        event_type = header.type_code
         if event_type == EventType.WRITE_ROWS_EVENT2:
             pass
         elif event_type == EventType.UPDATE_ROWS_EVENT2:
