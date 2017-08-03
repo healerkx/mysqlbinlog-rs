@@ -17,6 +17,7 @@ extern crate regex;
 use std::ffi::{CString, CStr}; 
 use std::os::raw::c_char;
 use std::ptr;
+use std::rc::Rc;
 
 #[no_mangle]
 pub extern fn binlog_reader_new(filename: *const c_char) -> *mut Reader {
@@ -45,7 +46,7 @@ pub extern fn binlog_reader_free(ptr: *mut Reader) {
 }
 
 #[no_mangle]
-pub extern fn binlog_reader_read_event_header(ptr: *mut Reader, header_ref: *mut EventHeader) -> bool {
+pub extern fn binlog_reader_read_event_header(ptr: *mut Reader, in_header: *mut EventHeader) -> bool {
     let mut reader = unsafe {
         assert!(!ptr.is_null());
         &mut *ptr
@@ -54,17 +55,25 @@ pub extern fn binlog_reader_read_event_header(ptr: *mut Reader, header_ref: *mut
     if let Ok(ref mut header) = reader.read_event_header() {
         // Copy for avoid alloc too much heap-memory
         unsafe {
-            header_ref.type_code = header.type_code;
-            header_ref.timestamp = header.timestamp;
-            header_ref.server_id = header.server_id;
-            header_ref.event_len = header.event_len;
-            header_ref.next_pos = header.next_pos;
-            header_ref.flags = header.flags
+            (*in_header).type_code = header.type_code;
+            (*in_header).timestamp = header.timestamp;
+            (*in_header).server_id = header.server_id;
+            (*in_header).event_len = header.event_len;
+            (*in_header).next_pos = header.next_pos;
+            (*in_header).flags = header.flags
         }
         true
     } else {
         false
     }
+}
+
+///////////////////////////////////////
+// For C code read the event
+#[repr(C)]
+pub struct EventInfo {    
+    row_count: usize,
+    col_count: usize
 }
 
 #[no_mangle]
@@ -73,7 +82,7 @@ pub extern fn binlog_reader_read_event(ptr: *mut Reader, header: *mut EventHeade
         assert!(!ptr.is_null());
         &mut *ptr
     };
-
+    
     let header = unsafe {
         assert!(!header.is_null());
         &mut *header
@@ -86,11 +95,22 @@ pub extern fn binlog_reader_read_event(ptr: *mut Reader, header: *mut EventHeade
     }
 }
 
+#[no_mangle]
+pub extern fn binlog_reader_read_event_info(ptr: *mut Event, info: *mut EventInfo) -> bool {
+    let mut event = unsafe {
+        assert!(!ptr.is_null());
+        &mut *ptr
+    };
+    true
+}
 
 #[no_mangle]
-pub extern fn binlog_reader_parse_event(event: *mut Event) {
-    let event = unsafe {
-        assert!(!event.is_null());
-        &mut *event
-    };
+pub extern fn binlog_reader_free_event(ptr: *mut Event) -> bool {
+    if ptr.is_null() {
+        return false;
+    }
+    unsafe {
+        Box::from_raw(ptr);
+    }
+    return true;
 }

@@ -6,15 +6,20 @@ import platform
 def main():
     reader = BinLogReader('/Users/healer/mysql_binlog.000001')
     
-    p = EventHeader()
+    eh = EventHeader()
         
     while True:
-        h = reader.read_event_header(p)
+        print('-' * 30)
+        h = reader.read_event_header(eh)
         if not h:
             print("Empty")
             break
         
-        reader.read_event(p)
+        event = reader.read_event(eh)
+        
+        reader.read_event_info(event)
+
+        reader.free_event(event)
     
     reader.close()
 

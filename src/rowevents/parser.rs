@@ -116,7 +116,6 @@ impl Parser {
         Ok(Event::FormatDescriptor(FormatDescriptorEvent::new()))
     }
 
-
     pub fn read_xid_event(&mut self, eh: &EventHeader) -> Result<Event> {
         let data = self.stream.read(12);
         let mut cursor = Cursor::new(&data);
@@ -214,7 +213,6 @@ impl Parser {
             let e = UpdateEvent::new(vec![], vec![]);
             Ok(Event::Update(e))
         }
-
     }
 
     pub fn read_delete_event(&mut self, eh: &EventHeader) -> Result<Event> {

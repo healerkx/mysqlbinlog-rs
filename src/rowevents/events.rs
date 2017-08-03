@@ -56,18 +56,18 @@ pub struct TableMapEvent {
 
 #[derive(Debug)]
 pub struct DeleteEvent {
-    entry: Vec<Vec<ValueType>>
+    pub entry: Vec<Vec<ValueType>>
 }
 
 #[derive(Debug)]
 pub struct InsertEvent {
-    entry: Vec<Vec<ValueType>>
+    pub entry: Vec<Vec<ValueType>>
 }
 
 #[derive(Debug)]
 pub struct UpdateEvent {
-    entry1: Vec<Vec<ValueType>>,
-    entry2: Vec<Vec<ValueType>>
+    pub entry1: Vec<Vec<ValueType>>,
+    pub entry2: Vec<Vec<ValueType>>
 }
 
 #[derive(Debug)]
@@ -79,43 +79,43 @@ pub struct RotateEvent {
 // Implements
 impl FormatDescriptorEvent {
     pub fn new() -> FormatDescriptorEvent {
-         FormatDescriptorEvent{}
+        FormatDescriptorEvent{}
     }
 }
 
 impl XidEvent {
     pub fn new(xid: i64) -> XidEvent {
-         XidEvent{ xid: xid }
+        XidEvent{ xid: xid }
     }  
 }
 
 impl TableMapEvent {
     pub fn new(db_name: String, table_name: String) -> TableMapEvent {
-         TableMapEvent{ db_name: db_name, table_name: table_name }
+        TableMapEvent{ db_name: db_name, table_name: table_name }
     }
 }
 
 impl InsertEvent {
     pub fn new(entry: Vec<Vec<ValueType>>) -> InsertEvent {
-         InsertEvent{entry: entry}
-    }
+        InsertEvent{entry: entry}
+    } 
 }
 
 impl UpdateEvent {
     pub fn new(entry1: Vec<Vec<ValueType>>, entry2: Vec<Vec<ValueType>>) -> UpdateEvent {
-         UpdateEvent{entry1: entry1, entry2: entry2}
+        UpdateEvent{entry1: entry1, entry2: entry2}
     }
 }
 
 impl DeleteEvent {
     pub fn new(entry: Vec<Vec<ValueType>>) -> DeleteEvent {
-         DeleteEvent{entry: entry}
-    }
+        DeleteEvent{entry: entry}
+    }   
 }
 
 impl RotateEvent {
     pub fn new() -> RotateEvent {
-         RotateEvent{}
+        RotateEvent{}
     }
 }
 
