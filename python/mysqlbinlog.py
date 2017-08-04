@@ -1,6 +1,7 @@
 
 
 from ctypes import *
+import time
 
 class EventType:
     UNKNOWN_EVENT = 0
@@ -45,6 +46,8 @@ class EventType:
     DELETE_ROWS_EVENT2 = 32
     # ----------------------------------
 
+def formatted_time(unixtime):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
 
 class EventHeader(Structure):
     _fields_ = [
@@ -57,12 +60,19 @@ class EventHeader(Structure):
         ]
 
     def __str__(self):
-        return "<HEADER: %d, %d>" % ( self.timestamp, self.type_code)
+        return "<HEADER: %s, %d>" % (formatted_time(self.timestamp), self.type_code)
 
 
 
 class EventInfo(Structure):
+
+    def __init__(self, event_header):
+        self.type_code = event_header.type_code
+
     _fields_ = [
+        ("type_code", c_byte),
+        ("db_name_len", c_uint),
+        ("table_name_len", c_uint),
         ("row_count", c_uint),
         ("col_count", c_uint)
     ]
@@ -121,13 +131,27 @@ class BinLogReader:
             pass
         """
 
-    def read_event_info(self, event, info):
+    def read_event_info(self, event_header, event):
         """
         """
         self.d.binlog_reader_read_event_info.restype = c_bool
         self.d.binlog_reader_read_event_info.argtypes = [c_void_p, POINTER(EventInfo)]
-        self.d.binlog_reader_read_event_info(event, byref(info))
-        return info
+        event_info = EventInfo(event_header)
+        self.d.binlog_reader_read_event_info(event, byref(event_info))
+        return event_info
+
+    def read_table_map_event(self, event, event_info):
+        db_name_t = c_char * event_info.db_name_len
+        table_name_t = c_char * event_info.table_name_len
+
+        db_name = db_name_t()
+        table_name = table_name_t()
+        self.d.binlog_reader_read_table_map_event.restype = c_bool
+        self.d.binlog_reader_read_table_map_event.argtypes = [c_void_p, POINTER(EventInfo), c_char_p, c_char_p]
+        self.d.binlog_reader_read_table_map_event(event, byref(event_info), db_name, table_name)
+        db_name = str(db_name.value, 'utf-8')
+        table_name = str(table_name.value, 'utf-8')
+        return db_name, table_name
 
     def free_event(self, event):
         """

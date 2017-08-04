@@ -72,7 +72,10 @@ pub extern fn binlog_reader_read_event_header(ptr: *mut Reader, in_header: *mut 
 // For C code read the event
 #[derive(Debug)]
 #[repr(C)]
-pub struct EventInfo {    
+pub struct EventInfo {
+    pub type_code: u8,
+    pub db_name_len: u32,
+    pub table_name_len: u32, 
     pub row_count: u32,
     pub col_count: u32
 }
@@ -104,6 +107,12 @@ pub extern fn binlog_reader_read_event_info(ptr: *mut Event, info: *mut EventInf
     };
 
     match event {
+        &Event::TableMap(ref e) => {
+            unsafe {
+                (*info).db_name_len = e.db_name.len() as u32;
+                (*info).table_name_len = e.table_name.len() as u32;
+            }
+        },
         
         &Event::Insert(ref e) => {
             unsafe {
@@ -111,21 +120,43 @@ pub extern fn binlog_reader_read_event_info(ptr: *mut Event, info: *mut EventInf
                 (*info).col_count = e.entry[0].len() as u32;
             }
         },
+
         &Event::Delete(ref e) => {
             unsafe {
                 (*info).row_count = e.entry.len() as u32;
                 (*info).col_count = e.entry[0].len() as u32;
             }
         },
+
         &Event::Update(ref e) => {
             unsafe {
                 (*info).row_count = e.entry1.len() as u32;
                 (*info).col_count = e.entry1[0].len() as u32;
             }
         },
-        _ => {}
+
+        _ => {assert!(false)}
     }
 
+    true
+}
+
+#[no_mangle]
+pub extern fn binlog_reader_read_table_map_event(ptr: *mut Event, info: *mut EventInfo, db_name: *mut u8, table_name: *mut u8) -> bool {
+    let event = unsafe {
+        assert!(!ptr.is_null());
+        &*ptr
+    };
+
+    match event {
+        &Event::TableMap(ref e) => {
+            unsafe {
+                ptr::copy_nonoverlapping(e.db_name.as_bytes().as_ptr(), db_name, e.db_name.len());
+                ptr::copy_nonoverlapping(e.table_name.as_bytes().as_ptr(), table_name, e.table_name.len());
+            }
+        },
+        _ => {}
+    }
     true
 }
 
