@@ -57,21 +57,16 @@ class EventHeader(Structure):
         ]
 
     def __str__(self):
-        return "< %d %d >" % ( self.timestamp, self.type_code)
+        return "<HEADER: %d, %d>" % ( self.timestamp, self.type_code)
 
 
 
 class EventInfo(Structure):
     _fields_ = [
-        ("row_count", c_int),
-        ("col_count", c_int)
+        ("row_count", c_uint),
+        ("col_count", c_uint)
     ]
 
-    def __str__(self):
-        return "(Row:%d Col:%d)" % (self.row_count, self.col_count)
-
-    def __del__(self):
-        print("###")
 
 
 
@@ -96,13 +91,15 @@ class BinLogReader:
         return b
 
     def read_event(self, header):
+        """
+        """        
         self.d.binlog_reader_read_event.restype = c_void_p
         self.d.binlog_reader_read_event.argtypes = [c_void_p, POINTER(EventHeader)]
         
         event = self.d.binlog_reader_read_event(self.reader, byref(header))
         
         return event
-        
+        """
         event_type = header.type_code
         if event_type == EventType.WRITE_ROWS_EVENT2:
             pass
@@ -122,14 +119,19 @@ class BinLogReader:
             pass
         else:
             pass
-    
-    def read_event_info(self, event):
+        """
+
+    def read_event_info(self, event, info):
+        """
+        """
         self.d.binlog_reader_read_event_info.restype = c_bool
         self.d.binlog_reader_read_event_info.argtypes = [c_void_p, POINTER(EventInfo)]
-        info = EventInfo()
         self.d.binlog_reader_read_event_info(event, byref(info))
+        return info
 
     def free_event(self, event):
+        """
+        """        
         self.d.binlog_reader_free_event.restype = c_bool
         self.d.binlog_reader_free_event.argtypes = [c_void_p]
         return self.d.binlog_reader_free_event(event)

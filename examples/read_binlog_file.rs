@@ -64,7 +64,6 @@ fn main() {
                 continue;
             }
             match e {
-                
                 Event::Insert(e) => print_event(&eh, &Event::Insert(e)),
                 Event::Delete(e) => print_event(&eh, &Event::Delete(e)),
                 Event::Update(e) => print_event(&eh, &Event::Update(e)),

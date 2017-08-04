@@ -8,7 +8,9 @@ def main():
     
     eh = EventHeader()
         
+    count = 0
     while True:
+
         print('-' * 30)
         h = reader.read_event_header(eh)
         if not h:
@@ -17,9 +19,11 @@ def main():
         
         event = reader.read_event(eh)
         
-        reader.read_event_info(event)
-
+        info = EventInfo()
+        
+        reader.read_event_info(event, info)
         reader.free_event(event)
+        count += 1
     
     reader.close()
 

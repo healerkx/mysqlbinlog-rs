@@ -70,10 +70,11 @@ pub extern fn binlog_reader_read_event_header(ptr: *mut Reader, in_header: *mut 
 
 ///////////////////////////////////////
 // For C code read the event
+#[derive(Debug)]
 #[repr(C)]
 pub struct EventInfo {    
-    row_count: usize,
-    col_count: usize
+    pub row_count: u32,
+    pub col_count: u32
 }
 
 #[no_mangle]
@@ -97,10 +98,34 @@ pub extern fn binlog_reader_read_event(ptr: *mut Reader, header: *mut EventHeade
 
 #[no_mangle]
 pub extern fn binlog_reader_read_event_info(ptr: *mut Event, info: *mut EventInfo) -> bool {
-    let mut event = unsafe {
+    let event = unsafe {
         assert!(!ptr.is_null());
-        &mut *ptr
+        &*ptr
     };
+
+    match event {
+        
+        &Event::Insert(ref e) => {
+            unsafe {
+                (*info).row_count = e.entry.len() as u32;
+                (*info).col_count = e.entry[0].len() as u32;
+            }
+        },
+        &Event::Delete(ref e) => {
+            unsafe {
+                (*info).row_count = e.entry.len() as u32;
+                (*info).col_count = e.entry[0].len() as u32;
+            }
+        },
+        &Event::Update(ref e) => {
+            unsafe {
+                (*info).row_count = e.entry1.len() as u32;
+                (*info).col_count = e.entry1[0].len() as u32;
+            }
+        },
+        _ => {}
+    }
+
     true
 }
 
