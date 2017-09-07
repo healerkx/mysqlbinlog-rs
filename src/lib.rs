@@ -28,7 +28,7 @@ pub extern fn binlog_reader_new(filename: *const c_char) -> *mut Reader {
     
     if let Ok(reader) = Reader::new(&c) {
         let p = Box::into_raw(Box::new(reader));
-        println!("{:?}", p);
+        // println!("{:?}", p);
         p
     } else {
         ptr::null_mut()
@@ -78,6 +78,17 @@ pub struct EventInfo {
     pub table_name_len: u32, 
     pub row_count: u32,
     pub col_count: u32
+}
+
+///////////////////////////////////////
+// For C code read the event
+#[derive(Debug)]
+#[repr(C)]
+pub struct FieldInfo {
+    pub field_type: u32,
+    pub field_len: u32,
+    pub field_value: i64,
+    
 }
 
 #[no_mangle]
@@ -135,9 +146,70 @@ pub extern fn binlog_reader_read_event_info(ptr: *mut Event, info: *mut EventInf
             }
         },
 
-        _ => {assert!(false)}
+        _ => {
+
+        }
     }
 
+    true
+}
+
+
+fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -> bool {
+    let mut index = 0;
+    
+    for entry in entry_vec {
+        for v in entry {
+
+            match v {
+                &ValueType::Tinyint(i) => {
+                    content[index].field_type = FieldType::Tiny as u32;
+                    content[index].field_len = 1;
+                    content[index].field_value = i as i64;
+                    println!("TINY {:?}", i);
+                },
+                &ValueType::Shortint(i) => {
+                    content[index].field_type = FieldType::Short as u32;
+                    content[index].field_len = 2;
+                    content[index].field_value = i as i64;
+                    println!("SHORT {:?}", i);
+                },
+                &ValueType::Int(i) => {
+                    content[index].field_type = FieldType::Long as u32;
+                    content[index].field_len = 4;
+                    content[index].field_value = i as i64;
+                    println!("INT {:?}", i);
+                },
+                &ValueType::Longlong(i) => {
+                    content[index].field_type = FieldType::Longlong as u32;
+                    content[index].field_len = 8;
+                    content[index].field_value = i as i64;
+                    println!("LONGLONG [{}]{:?}", i, index);
+                },
+
+                &ValueType::String(ref i) => {
+                    content[index].field_type = FieldType::VarString as u32;
+                    content[index].field_len = i.len() as u32;
+                    let s = String::from_utf8(i.to_vec()).unwrap();
+                    content[index].field_value = CString::new(s).unwrap().into_raw() as i64;
+                    println!("STR{:?} {}", i, FieldType::VarString as u8);
+
+                },
+                &ValueType::Null => {
+                    content[index].field_type = FieldType::Null as u32;
+                    content[index].field_len = 0;
+                    content[index].field_value = 0;
+                },
+                _ => {
+                    println!("==>{:?}", v);
+                }
+            }
+
+            index += 1;
+        }
+        
+    }
+    println!("********** index, {}", index);
     true
 }
 
@@ -157,6 +229,48 @@ pub extern fn binlog_reader_read_table_map_event(ptr: *mut Event, info: *mut Eve
         },
         _ => {}
     }
+    true
+}
+
+#[no_mangle]
+pub extern fn binlog_reader_read_delete_event_rows(ptr: *mut Event, info: *mut EventInfo, content: &mut [FieldInfo]) -> bool {
+    
+    true
+}
+
+#[no_mangle]
+pub extern fn binlog_reader_read_insert_event_rows(ptr: *mut Event, info: *mut EventInfo, content: &mut [FieldInfo]) -> bool {
+    
+    true
+}
+
+/**
+let a = CString::new("Hello, world!").unwrap();
+let b = a.into_raw();
+*/
+#[no_mangle]
+pub extern fn binlog_reader_read_update_event_rows(ptr: *mut Event, info: *mut EventInfo, content: *mut FieldInfo, new_entry: bool) -> bool {
+    let content : &mut [FieldInfo] = unsafe {
+        let size = ((*info).row_count * (*info).col_count) as usize;
+        std::slice::from_raw_parts_mut(content, size)
+    };
+    
+    let event = unsafe {
+        assert!(!ptr.is_null());
+        &*ptr
+    };
+    match event {
+        &Event::Update(ref e) => {
+            if new_entry {
+                read_event_rows(&e.entry2, content);
+            } else {
+                read_event_rows(&e.entry1, content);
+            }
+            
+        },
+        _ => { println!("Assert()"); }
+    }
+    
     true
 }
 

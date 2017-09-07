@@ -1,5 +1,4 @@
 
-
 from ctypes import *
 import time
 
@@ -63,7 +62,6 @@ class EventHeader(Structure):
         return "<HEADER: %s, %d>" % (formatted_time(self.timestamp), self.type_code)
 
 
-
 class EventInfo(Structure):
 
     def __init__(self, event_header):
@@ -78,6 +76,25 @@ class EventInfo(Structure):
     ]
 
 
+class FieldInfo(Structure):
+    _fields_ = [
+        ("field_type", c_uint32),
+        ("field_len", c_uint32),
+        ("field_value", c_int64)
+    ]
+
+    def value(self):
+        if self.field_type in [1, 2, 3, 8]:
+            return self.field_value
+        elif self.field_type == 253:
+            return string_at(self.field_value, self.field_len)
+        elif self.field_type == 6:
+            return None
+        else:
+            return '?'
+
+    def __str__(self):
+        return "<%s: %s>" % (self.field_type, self.field_value)
 
 
 class BinLogReader:
@@ -109,27 +126,7 @@ class BinLogReader:
         event = self.d.binlog_reader_read_event(self.reader, byref(header))
         
         return event
-        """
-        event_type = header.type_code
-        if event_type == EventType.WRITE_ROWS_EVENT2:
-            pass
-        elif event_type == EventType.UPDATE_ROWS_EVENT2:
-            pass
-        elif event_type == EventType.DELETE_ROWS_EVENT2:
-            pass
-        elif event_type == EventType.XID_EVENT:
-            pass
-        elif event_type == EventType.TABLE_MAP_EVENT:
-            pass
-        elif event_type == EventType.ROTATE_EVENT:
-            pass
-        elif event_type == EventType.STOP_EVENT:
-            pass                                             
-        elif event_type == EventType.UNKNOWN_EVENT:
-            pass
-        else:
-            pass
-        """
+
 
     def read_event_info(self, event_header, event):
         """
@@ -152,6 +149,48 @@ class BinLogReader:
         db_name = str(db_name.value, 'utf-8')
         table_name = str(table_name.value, 'utf-8')
         return db_name, table_name
+
+    def read_delete_event_rows(self, event, event_info):
+        count = event_info.row_count * event_info.col_count
+        content_t = FieldInfo * count
+        self.d.binlog_reader_read_delete_event_rows.restype = c_bool
+        self.d.binlog_reader_read_delete_event_rows.argtypes = [c_void_p, POINTER(EventInfo), content_t]
+        content = content_t()
+        self.d.binlog_reader_read_delete_event_rows(event, byref(event_info), content)
+
+    def __parse_content(self, content, row_count, col_count):
+        i, j = 0, 0
+        rows = []
+        for i in range(0, row_count):
+            row = []
+            for j in range(0, col_count):
+                index = i * col_count + j
+                f = content[index].value()
+                row.append(f)
+            rows.append(row)
+        return rows
+
+    def read_update_event_rows(self, event, event_info):
+        count = event_info.row_count * event_info.col_count
+        content_t = FieldInfo * count
+        print('count', count)
+        content1 = content_t()
+        content2 = content_t()
+
+        self.d.binlog_reader_read_update_event_rows.restype = c_bool
+        self.d.binlog_reader_read_update_event_rows.argtypes = [c_void_p, POINTER(EventInfo), POINTER(content_t), c_bool]
+
+        self.d.binlog_reader_read_update_event_rows(event, byref(event_info), byref(content1), False)
+        self.d.binlog_reader_read_update_event_rows(event, byref(event_info), byref(content2), True)
+        
+        old = self.__parse_content(content1, event_info.row_count, event_info.col_count)
+        new = self.__parse_content(content2, event_info.row_count, event_info.col_count)
+        return old, new
+
+    def read_insert_event_rows(self, event, event_info):
+        count = event_info.row_count * event_info.col_count
+        content_t = FieldInfo * count
+        
 
     def free_event(self, event):
         """
