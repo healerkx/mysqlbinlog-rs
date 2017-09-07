@@ -103,36 +103,54 @@ class BinLogReader:
 
     def __init__(self, filename):
         self.d = cdll.LoadLibrary('/Users/healer/Projects/privates/mysqlbinlog-rs/target/debug/libmysqlbinlog.dylib')
+        
         self.d.binlog_reader_new.restype = c_void_p
         self.reader = self.d.binlog_reader_new(bytes(filename, 'utf8'))
-
-
-    def close(self):
+        #
         self.d.binlog_reader_free.argtypes = [c_void_p]
+        #
+        self.d.binlog_reader_read_event_header.restype = c_byte
+        self.d.binlog_reader_read_event_header.argtypes = [c_void_p, POINTER(EventHeader)]
+
+        #
+        self.d.binlog_reader_read_event.restype = c_void_p
+        self.d.binlog_reader_read_event.argtypes = [c_void_p, POINTER(EventHeader)]
+
+        #
+        self.d.binlog_reader_read_event_info.restype = c_bool
+        self.d.binlog_reader_read_event_info.argtypes = [c_void_p, POINTER(EventInfo)]
+        
+        #
+        self.d.binlog_reader_read_table_map_event.restype = c_bool
+        self.d.binlog_reader_read_table_map_event.argtypes = [c_void_p, POINTER(EventInfo), c_char_p, c_char_p]
+        
+        #                   
+        self.d.binlog_reader_read_rows_event_content.restype = c_bool
+        # content_t is dynamic
+        # self.d.binlog_reader_read_rows_event_content.argtypes = [c_void_p, POINTER(EventInfo), POINTER(content_t), c_bool]
+
+        #
+        self.d.binlog_reader_free_event.restype = c_bool
+        self.d.binlog_reader_free_event.argtypes = [c_void_p]
+
+    #
+    def close(self):
         self.d.binlog_reader_free(self.reader)
 
     def read_event_header(self, header):
-        self.d.binlog_reader_read_event_header.restype = c_byte
-        self.d.binlog_reader_read_event_header.argtypes = [c_void_p, POINTER(EventHeader)]
         b = self.d.binlog_reader_read_event_header(self.reader, byref(header))
         return b
 
     def read_event(self, header):
         """
-        """        
-        self.d.binlog_reader_read_event.restype = c_void_p
-        self.d.binlog_reader_read_event.argtypes = [c_void_p, POINTER(EventHeader)]
-        
+        """
         event = self.d.binlog_reader_read_event(self.reader, byref(header))
-        
         return event
 
 
     def read_event_info(self, event_header, event):
         """
         """
-        self.d.binlog_reader_read_event_info.restype = c_bool
-        self.d.binlog_reader_read_event_info.argtypes = [c_void_p, POINTER(EventInfo)]
         event_info = EventInfo(event_header)
         self.d.binlog_reader_read_event_info(event, byref(event_info))
         return event_info
@@ -143,21 +161,13 @@ class BinLogReader:
 
         db_name = db_name_t()
         table_name = table_name_t()
-        self.d.binlog_reader_read_table_map_event.restype = c_bool
-        self.d.binlog_reader_read_table_map_event.argtypes = [c_void_p, POINTER(EventInfo), c_char_p, c_char_p]
+
         self.d.binlog_reader_read_table_map_event(event, byref(event_info), db_name, table_name)
         db_name = str(db_name.value, 'utf-8')
         table_name = str(table_name.value, 'utf-8')
         return db_name, table_name
 
-    def read_delete_event_rows(self, event, event_info):
-        count = event_info.row_count * event_info.col_count
-        content_t = FieldInfo * count
-        self.d.binlog_reader_read_delete_event_rows.restype = c_bool
-        self.d.binlog_reader_read_delete_event_rows.argtypes = [c_void_p, POINTER(EventInfo), content_t]
-        content = content_t()
-        self.d.binlog_reader_read_delete_event_rows(event, byref(event_info), content)
-
+    #
     def __parse_content(self, content, row_count, col_count):
         i, j = 0, 0
         rows = []
@@ -169,32 +179,36 @@ class BinLogReader:
                 row.append(f)
             rows.append(row)
         return rows
-
-    def read_update_event_rows(self, event, event_info):
+    
+    #
+    def read_rows_event_content(self, event, event_info, new_entry=True):
+        '''
+        '''
         count = event_info.row_count * event_info.col_count
         content_t = FieldInfo * count
-        print('count', count)
-        content1 = content_t()
-        content2 = content_t()
+        content = content_t()
+        # TODO: Cache the restype and argtypes
+        # self.d.binlog_reader_read_rows_event_content.restype = c_bool
+        self.d.binlog_reader_read_rows_event_content.argtypes = [c_void_p, POINTER(EventInfo), POINTER(content_t), c_bool]
 
-        self.d.binlog_reader_read_update_event_rows.restype = c_bool
-        self.d.binlog_reader_read_update_event_rows.argtypes = [c_void_p, POINTER(EventInfo), POINTER(content_t), c_bool]
+        self.d.binlog_reader_read_rows_event_content(event, byref(event_info), byref(content), new_entry)
 
-        self.d.binlog_reader_read_update_event_rows(event, byref(event_info), byref(content1), False)
-        self.d.binlog_reader_read_update_event_rows(event, byref(event_info), byref(content2), True)
-        
-        old = self.__parse_content(content1, event_info.row_count, event_info.col_count)
-        new = self.__parse_content(content2, event_info.row_count, event_info.col_count)
-        return old, new
+        return self.__parse_content(content, event_info.row_count, event_info.col_count)
+
 
     def read_insert_event_rows(self, event, event_info):
-        count = event_info.row_count * event_info.col_count
-        content_t = FieldInfo * count
-        
+        return self.read_rows_event_content(event, event_info, True)
+
+    def read_update_event_rows(self, event, event_info):
+        old = self.read_rows_event_content(event, event_info, False)
+        new = self.read_rows_event_content(event, event_info, True)
+        return old, new
+    #
+    def read_delete_event_rows(self, event, event_info):
+        return self.read_rows_event_content(event, event_info, True)
+
 
     def free_event(self, event):
         """
-        """        
-        self.d.binlog_reader_free_event.restype = c_bool
-        self.d.binlog_reader_free_event.argtypes = [c_void_p]
+        """
         return self.d.binlog_reader_free_event(event)

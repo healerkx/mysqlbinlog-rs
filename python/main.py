@@ -25,7 +25,6 @@ def main():
             print(db, table)
         elif event_info.type_code == EventType.DELETE_ROWS_EVENT2:
             reader.read_delete_event_rows(event, event_info)
-            print('??')
         elif event_info.type_code == EventType.UPDATE_ROWS_EVENT2:
             old, new = reader.read_update_event_rows(event, event_info)
 

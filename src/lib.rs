@@ -249,7 +249,7 @@ let a = CString::new("Hello, world!").unwrap();
 let b = a.into_raw();
 */
 #[no_mangle]
-pub extern fn binlog_reader_read_update_event_rows(ptr: *mut Event, info: *mut EventInfo, content: *mut FieldInfo, new_entry: bool) -> bool {
+pub extern fn binlog_reader_read_rows_event_content(ptr: *mut Event, info: *mut EventInfo, content: *mut FieldInfo, new_entry: bool) -> bool {
     let content : &mut [FieldInfo] = unsafe {
         let size = ((*info).row_count * (*info).col_count) as usize;
         std::slice::from_raw_parts_mut(content, size)
@@ -259,6 +259,7 @@ pub extern fn binlog_reader_read_update_event_rows(ptr: *mut Event, info: *mut E
         assert!(!ptr.is_null());
         &*ptr
     };
+    
     match event {
         &Event::Update(ref e) => {
             if new_entry {
@@ -266,9 +267,16 @@ pub extern fn binlog_reader_read_update_event_rows(ptr: *mut Event, info: *mut E
             } else {
                 read_event_rows(&e.entry1, content);
             }
-            
         },
-        _ => { println!("Assert()"); }
+        &Event::Insert(ref e) => {
+            read_event_rows(&e.entry, content);
+        },
+        &Event::Delete(ref e) => {
+            read_event_rows(&e.entry, content);
+        },
+        _ => {
+            assert!(false);
+        }
     }
     
     true
