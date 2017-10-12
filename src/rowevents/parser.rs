@@ -368,11 +368,14 @@ impl Parser {
             } else if col_type == FieldType::Varchar as u8 {
                 metadata1 = md[0];
                 metadata2 = md[1];
-                slice_begin += 2;                
+                slice_begin += 2;
+            } else if col_type == FieldType::Double as u8 ||
+                      col_type == FieldType::Float as u8 {
+                // What's in metadata for float/double?
+                slice_begin += 1;
             }
             
             i += 1;
-            
             self.field_types.push((col_type, nullable, metadata1, metadata2));
         }
     }
