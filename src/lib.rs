@@ -168,7 +168,7 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
                     content[index].field_value = i as i64;
                     // println!("TINY {:?}", i);
                 },
-                
+
                 &ValueType::Shortint(i) => {
                     content[index].field_type = FieldType::Short as u32;
                     content[index].field_len = 2;
@@ -186,24 +186,25 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
                     content[index].field_type = FieldType::Longlong as u32;
                     content[index].field_len = 8;
                     content[index].field_value = i as i64;
-                    // println!("LONGLONG [{}]{:?}", i, index);
                 },
 
                 &ValueType::Float(f) => {
                     content[index].field_type = FieldType::Float as u32;
-                    content[index].field_len = 4;
-                    content[index].field_value = f as i64;
+                    let s = format!("{}", f);
+                    content[index].field_len = s.len() as u32;
+                    content[index].field_value = CString::new(s.as_bytes()).unwrap().into_raw() as i64;
                 },
 
                 &ValueType::Double(f) => {
                     content[index].field_type = FieldType::Double as u32;
-                    content[index].field_len = 8;
-                    content[index].field_value = f as i64;
+                    let s = format!("{}", f);
+                    content[index].field_len = s.len() as u32;
+                    content[index].field_value = CString::new(s.as_bytes()).unwrap().into_raw() as i64;
                 },
 
                 &ValueType::Decimal(ref d) => {
                     content[index].field_type = FieldType::NewDecimal as u32;
-                    content[index].field_len = d.len() as u32;;
+                    content[index].field_len = d.len() as u32;
                     content[index].field_value = CString::new(d.as_bytes()).unwrap().into_raw() as i64;
                 },
 

@@ -56,11 +56,12 @@ pub fn parse_field(field_type: u8, nullable: bool, metadata1: u8, metadata2: u8,
         (ValueType::Longlong(v), 8)
     } else if field_type == FieldType::Float as u8 {
         let mut cursor = Cursor::new(&data);
-        let v:f32 = cursor.read_f32::<LittleEndian>()?;            
+        let v:f32 = cursor.read_f32::<LittleEndian>()?;
         (ValueType::Float(v), 4)
     } else if field_type == FieldType::Double as u8 {
         let mut cursor = Cursor::new(&data);
-        let v:f64 = cursor.read_f64::<LittleEndian>()?;         
+        let v:f64 = cursor.read_f64::<LittleEndian>()?;
+        println!("({:?})", v);
         (ValueType::Double(v), 8)
     }  else if field_type == FieldType::Datetime2 as u8 {
         let (dt, offset) = parse_datetime2(metadata1, metadata2, data)?;

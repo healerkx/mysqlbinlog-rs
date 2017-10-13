@@ -49,6 +49,7 @@ class EventType:
 def formatted_time(unixtime):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
 
+
 class EventHeader(Structure):
     _fields_ = [
         ("timestamp", c_int),
@@ -89,15 +90,20 @@ class FieldInfo(Structure):
             return self.field_value
         elif self.field_type == 253:
             return string_at(self.field_value, self.field_len)
-        elif self.field_type == 5:
-            return float(self.field_value)
-        elif self.field_type == 6:
-            return float(self.field_value)
+        elif self.field_type == 5 or self.field_type == 6:
+            u = self.as_utf8_str()
+            if u == '':
+                return '0.0'
+            return float(u)
         elif self.field_type == 246:
             s = str(string_at(self.field_value, self.field_len), 'utf-8')
             return D(s)
         else:
             return '?'
+    
+    def as_utf8_str(self):
+        b = string_at(self.field_value, self.field_len)
+        return str(b, 'utf-8')
 
     def __str__(self):
         return "<%s: %s>" % (self.field_type, self.field_value)
