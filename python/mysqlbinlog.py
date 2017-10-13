@@ -90,14 +90,16 @@ class FieldInfo(Structure):
             return self.field_value
         elif self.field_type == 253:
             return string_at(self.field_value, self.field_len)
-        elif self.field_type == 5 or self.field_type == 6:
+        elif self.field_type == 4 or self.field_type == 5:
             u = self.as_utf8_str()
             if u == '':
-                return '0.0'
+                return ''
             return float(u)
         elif self.field_type == 246:
             s = str(string_at(self.field_value, self.field_len), 'utf-8')
             return D(s)
+        elif self.field_type == 6:
+            return None
         else:
             return '?'
     
