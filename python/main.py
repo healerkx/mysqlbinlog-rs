@@ -10,8 +10,7 @@ def main():
     
     count = 0
     while True:
-
-        print('-' * 30)
+        # print('-' * 30)
         h = reader.read_event_header(event_header)
         if not h:
             print("Empty")
@@ -24,18 +23,15 @@ def main():
             db, table = reader.read_table_map_event(event, event_info)
             print(db, table)
         elif event_info.type_code == EventType.DELETE_ROWS_EVENT2:
-            reader.read_delete_event_rows(event, event_info)
+            rows = reader.read_delete_event_rows(event, event_info)
+            print(rows)
         elif event_info.type_code == EventType.UPDATE_ROWS_EVENT2:
             old, new = reader.read_update_event_rows(event, event_info)
-
-            for i in old[0]:
-                print(i)
-            for i in new[0]:
-                print(i)
-            
+            print(old)
+            print(new)   
         elif event_info.type_code == EventType.WRITE_ROWS_EVENT2:
-            reader.read_insert_event_rows(event, event_info)
-            print('$$')
+            rows = reader.read_insert_event_rows(event, event_info)
+            print(rows)
             
         reader.free_event(event)
         count += 1

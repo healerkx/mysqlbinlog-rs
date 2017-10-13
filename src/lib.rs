@@ -166,25 +166,45 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
                     content[index].field_type = FieldType::Tiny as u32;
                     content[index].field_len = 1;
                     content[index].field_value = i as i64;
-                    println!("TINY {:?}", i);
+                    // println!("TINY {:?}", i);
                 },
+                
                 &ValueType::Shortint(i) => {
                     content[index].field_type = FieldType::Short as u32;
                     content[index].field_len = 2;
                     content[index].field_value = i as i64;
-                    println!("SHORT {:?}", i);
+                    // println!("SHORT {:?}", i);
                 },
                 &ValueType::Int(i) => {
                     content[index].field_type = FieldType::Long as u32;
                     content[index].field_len = 4;
                     content[index].field_value = i as i64;
-                    println!("INT {:?}", i);
+                    // println!("INT {:?}", i);
                 },
+
                 &ValueType::Longlong(i) => {
                     content[index].field_type = FieldType::Longlong as u32;
                     content[index].field_len = 8;
                     content[index].field_value = i as i64;
-                    println!("LONGLONG [{}]{:?}", i, index);
+                    // println!("LONGLONG [{}]{:?}", i, index);
+                },
+
+                &ValueType::Float(f) => {
+                    content[index].field_type = FieldType::Float as u32;
+                    content[index].field_len = 4;
+                    content[index].field_value = f as i64;
+                },
+
+                &ValueType::Double(f) => {
+                    content[index].field_type = FieldType::Double as u32;
+                    content[index].field_len = 8;
+                    content[index].field_value = f as i64;
+                },
+
+                &ValueType::Decimal(ref d) => {
+                    content[index].field_type = FieldType::NewDecimal as u32;
+                    content[index].field_len = d.len() as u32;;
+                    content[index].field_value = CString::new(d.as_bytes()).unwrap().into_raw() as i64;
                 },
 
                 &ValueType::String(ref i) => {
@@ -192,16 +212,15 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
                     content[index].field_len = i.len() as u32;
                     let s = String::from_utf8(i.to_vec()).unwrap();
                     content[index].field_value = CString::new(s).unwrap().into_raw() as i64;
-                    println!("STR{:?} {}", i, FieldType::VarString as u8);
-
                 },
+
                 &ValueType::Null => {
                     content[index].field_type = FieldType::Null as u32;
                     content[index].field_len = 0;
                     content[index].field_value = 0;
                 },
                 _ => {
-                    println!("==>{:?}", v);
+                    // println!("==>{:?}", v);
                 }
             }
 
@@ -209,7 +228,7 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
         }
         
     }
-    println!("********** index, {}", index);
+    // println!("********** index, {}", index);
     true
 }
 

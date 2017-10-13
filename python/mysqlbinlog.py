@@ -1,6 +1,7 @@
 
 from ctypes import *
 import time
+from decimal import Decimal as D
 
 class EventType:
     UNKNOWN_EVENT = 0
@@ -88,8 +89,13 @@ class FieldInfo(Structure):
             return self.field_value
         elif self.field_type == 253:
             return string_at(self.field_value, self.field_len)
+        elif self.field_type == 5:
+            return float(self.field_value)
         elif self.field_type == 6:
-            return None
+            return float(self.field_value)
+        elif self.field_type == 246:
+            s = str(string_at(self.field_value, self.field_len), 'utf-8')
+            return D(s)
         else:
             return '?'
 
@@ -106,6 +112,9 @@ class BinLogReader:
         
         self.d.binlog_reader_new.restype = c_void_p
         self.reader = self.d.binlog_reader_new(bytes(filename, 'utf8'))
+        if not self.reader:
+            print("Failed to open '%s'." % filename)
+            exit()
         #
         self.d.binlog_reader_free.argtypes = [c_void_p]
         #

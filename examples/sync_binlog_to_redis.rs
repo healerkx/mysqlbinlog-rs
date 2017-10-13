@@ -9,7 +9,7 @@ fn main() {
     if let Ok(mut r) = reader {
         
         while let Ok(e1) = r.read_event_header() {
-            println!("-------------------------------------------");
+            println!("@-------------------------------------------");
             println!("{}", e1.get_time());
             let event = r.read_event(&e1);
             match event {
