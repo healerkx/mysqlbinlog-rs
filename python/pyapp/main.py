@@ -1,7 +1,8 @@
-
+import sys
+sys.path.append('../pylib')
 from mysqlbinlog import *
 from ctypes import *
-import platform
+import platform, time
 
 def main():
     reader = BinLogReader('/Users/healer/mysql_binlog.000001')
@@ -40,5 +41,7 @@ def main():
 
 
 if __name__ == '__main__':
-    
+    b = time.clock()
     main()
+    e = time.clock()
+    print(e - b)

@@ -11,6 +11,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::option::Option;
 use std::io::Cursor;
 use std::io::Result;
+use std::io::{Error, ErrorKind};
 use std::str;
 
 pub struct Parser {
@@ -78,24 +79,27 @@ impl Parser {
     pub fn read_event_header(&mut self) -> Result<EventHeader> {
     
         let data = self.stream.read(19);
+        if data.len() > 0 {
+            let mut cursor = Cursor::new(&data);
         
-        let mut cursor = Cursor::new(&data);
-    
-        let timestamp = cursor.read_i32::<LittleEndian>()?;
-        let type_code = cursor.read_i8()?;
-        let server_id = cursor.read_i32::<LittleEndian>()?;
-        let event_len = cursor.read_i32::<LittleEndian>()?;
-        let next_pos = cursor.read_i32::<LittleEndian>()?;
-        let flags = cursor.read_i16::<LittleEndian>()?;
-    
-        Ok(EventHeader::new(
-            timestamp,
-            type_code,
-            server_id,
-            event_len,
-            next_pos,
-            flags
-        ))
+            let timestamp = cursor.read_i32::<LittleEndian>()?;
+            let type_code = cursor.read_i8()?;
+            let server_id = cursor.read_i32::<LittleEndian>()?;
+            let event_len = cursor.read_i32::<LittleEndian>()?;
+            let next_pos = cursor.read_i32::<LittleEndian>()?;
+            let flags = cursor.read_i16::<LittleEndian>()?;
+        
+            Ok(EventHeader::new(
+                timestamp,
+                type_code,
+                server_id,
+                event_len,
+                next_pos,
+                flags
+            ))
+        } else {
+            Err(Error::new(ErrorKind::Other, "Nothing Read!"))
+        }
     }
 
     pub fn read_unknown_event(&mut self, eh: &EventHeader) -> Result<Event> {

@@ -3,6 +3,7 @@ from ctypes import *
 import time
 from decimal import Decimal as D
 
+# TODO: setup.py
 class EventType:
     UNKNOWN_EVENT = 0
     START_EVENT_V3 = 1

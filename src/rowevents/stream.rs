@@ -63,10 +63,9 @@ impl Stream {
 
         if from + size >= self.content.len() {
             match self.read_file(size) {
-                Ok(0) => {
-                    // TODO: Wait or Quit?    
-                    println!("Reach the end of this binlog file");
-                    process::exit(0x0000);
+                Ok(0) => {  
+                    // println!("Reach the end of this binlog file");
+                    return b"".as_ref()
                 },
                 _ => {}
             }
