@@ -1,5 +1,5 @@
 
-
+# This config is read by examples/read_binlog_file.rs
 
 [filter]
 excluded=["antares.*"]

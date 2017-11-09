@@ -65,6 +65,7 @@ impl Stream {
             match self.read_file(size) {
                 Ok(0) => {  
                     // println!("Reach the end of this binlog file");
+                    self.offset -= size;
                     return &[][..]
                 },
                 _ => {}
