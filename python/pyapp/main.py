@@ -57,6 +57,7 @@ def main(options, args):
     while True:
         # print('-' * 30)
         h = reader.read_event_header(event_header)
+
         if not h:
             if quit_when_eof:
                 break
@@ -64,12 +65,15 @@ def main(options, args):
                 seconds = milliseconds / 1000
                 time.sleep(seconds)
                 continue
-        
+
         event = reader.read_event(event_header)
+        if not event:
+            continue
+
         if skip:
             skip = False
             continue
-
+        
         event_info = reader.read_event_info(event_header, event)
         if event_info.type_code == EventType.TABLE_MAP_EVENT:
             db, table = reader.read_table_map_event(event, event_info)
@@ -109,7 +113,7 @@ if __name__ == '__main__':
     parser.add_option("-l", "--highlight", action="store", dest="highlight", help="Highlights the differences")
     parser.add_option("-i", "--ignore", action="store", dest="ignore", help="The db and table pattern to ignore")
     parser.add_option("-q", "--quit-when-eof", action="store", dest="quit_when_eof", help="Quit the program when EOF?", default=False)
-    parser.add_option("-m", "--milliseconds", action="store", dest="milliseconds", help="Provide sleep seconds", default=10)
+    parser.add_option("-m", "--milliseconds", action="store", dest="milliseconds", help="Provide sleep seconds", default=100)
     options, args = parser.parse_args()
     
     if not options.binlog:

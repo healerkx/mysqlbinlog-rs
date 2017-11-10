@@ -63,12 +63,17 @@ impl Stream {
 
         if from + size >= self.content.len() {
             match self.read_file(size) {
-                Ok(0) => {  
+                Ok(0) => {
                     // println!("Reach the end of this binlog file");
                     self.offset -= size;
                     return &[][..]
                 },
-                _ => {}
+                Err(_) => {
+                    self.offset -= size;
+                    return &[][..]
+                },
+                _ => {
+                }
             }
         }
         
@@ -78,11 +83,16 @@ impl Stream {
     // try! Read size * 2 bytes from file
     pub fn read_file(&mut self, size: usize) -> Result<usize> {
         let mut buffer = Vec::with_capacity(size * 2);
-        buffer.resize(size * 2, 0);
+        buffer.resize(size, 0); // TODO: Read more doc
         if let Some(ref mut file) = self.file {
             let read = file.read(&mut buffer)?;
-            self.content.extend_from_slice(&buffer[0..read]);
-            Ok(read)
+            if read > 0 {
+                self.content.extend_from_slice(&buffer[0..read]);
+                Ok(read)
+            } else {
+                Ok(0)
+            }
+            // TODO: the read MAYBE 0, should return Err
         } else {
             Err(Error::new(ErrorKind::Other, "oh no!"))
         }
