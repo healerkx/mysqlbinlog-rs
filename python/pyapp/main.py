@@ -18,22 +18,22 @@ def print_row(row):
 
 
 def print_updates(old, new):
-    print('update')
     count, index = len(old), 0
     while index < count:
         print_row(old[index])
         print_row(new[index])
         index += 1
 
-
 def print_inserts(rows):
-    print('insert')
     for row in rows:
         print_row(row)
 
 def print_deletes(rows):
     for row in rows:
         print_row(row)
+
+def print_table_time_info(timestamp, db_table, operation):
+    print("[%s] %s %s" % (formatted_time(timestamp), operation, db_table))
 
 def main(options, args):
     reader = BinLogReader(options.binlog)
@@ -53,6 +53,7 @@ def main(options, args):
 
     count = 0
     skip = False
+    current_db_table = ''
     while True:
         # print('-' * 30)
         h = reader.read_event_header(event_header)
@@ -68,7 +69,7 @@ def main(options, args):
         if skip:
             skip = False
             continue
-        
+
         event_info = reader.read_event_info(event_header, event)
         if event_info.type_code == EventType.TABLE_MAP_EVENT:
             db, table = reader.read_table_map_event(event, event_info)
@@ -80,15 +81,18 @@ def main(options, args):
                     break
             if skip:
                 continue
-            print('@', full_name)
+            current_db_table = full_name
         elif event_info.type_code == EventType.DELETE_ROWS_EVENT2:
             rows = reader.read_delete_event_rows(event, event_info)
+            print_table_time_info(event_header.timestamp, current_db_table, 'delete')
             print_deletes(rows)
         elif event_info.type_code == EventType.UPDATE_ROWS_EVENT2:
             old, new = reader.read_update_event_rows(event, event_info)
+            print_table_time_info(event_header.timestamp, current_db_table, 'update')
             print_updates(old, new)
         elif event_info.type_code == EventType.WRITE_ROWS_EVENT2:
             rows = reader.read_insert_event_rows(event, event_info)
+            print_table_time_info(event_header.timestamp, current_db_table, 'insert')
             print_inserts(rows)
             
         reader.free_event(event)
