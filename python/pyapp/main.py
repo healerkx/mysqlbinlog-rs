@@ -6,23 +6,34 @@ import platform, time, re
 from optparse import OptionParser
 
 
+def print_row(row):
+    for item in row:
+        if not item:
+            print('<none>', end=', ')
+        elif type(item) == bytes:
+            print(str(item, 'utf8'), end=', ')
+        else:
+            print(item, end=', ')
+    print()
+
+
 def print_updates(old, new):
     print('update')
     count, index = len(old), 0
     while index < count:
-        print(old[index])
-        print(new[index])
+        print_row(old[index])
+        print_row(new[index])
         index += 1
 
 
 def print_inserts(rows):
     print('insert')
     for row in rows:
-        print(row)
+        print_row(row)
 
 def print_deletes(rows):
     for row in rows:
-        print(row)
+        print_row(row)
 
 def main(options, args):
     reader = BinLogReader(options.binlog)
