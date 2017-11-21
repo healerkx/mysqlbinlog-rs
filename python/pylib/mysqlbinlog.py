@@ -198,7 +198,7 @@ class BinLogReader:
             rows.append(row)
         return rows
     
-    #
+    # new_entry is for update rows event
     def read_rows_event_content(self, event, event_info, new_entry=True):
         '''
         '''
@@ -208,10 +208,14 @@ class BinLogReader:
         # TODO: Cache the restype and argtypes
         # self.d.binlog_reader_read_rows_event_content.restype = c_bool
         self.d.binlog_reader_read_rows_event_content.argtypes = [c_void_p, POINTER(EventInfo), POINTER(content_t), c_bool]
-
         self.d.binlog_reader_read_rows_event_content(event, byref(event_info), byref(content), new_entry)
+        
+        items = self.__parse_content(content, event_info.row_count, event_info.col_count)
 
-        return self.__parse_content(content, event_info.row_count, event_info.col_count)
+        self.d.binlog_reader_free_rows_event_content.argtypes = [c_void_p, POINTER(EventInfo), POINTER(content_t)]
+        self.d.binlog_reader_free_rows_event_content(event, byref(event_info), byref(content))
+
+        return items
 
 
     def read_insert_event_rows(self, event, event_info):

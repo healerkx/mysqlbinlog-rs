@@ -233,6 +233,48 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
     true
 }
 
+fn free_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -> bool {
+    let mut index = 0;
+    for entry in entry_vec {
+        for v in entry {
+            match v {
+
+                &ValueType::Float(f) => {
+                    unsafe {
+                        CString::from_raw(content[index].field_value as *mut c_char);
+                    }
+                },
+
+                &ValueType::Double(f) => {
+                    unsafe {
+                        CString::from_raw(content[index].field_value as *mut c_char);
+                    }
+                },
+
+                &ValueType::Decimal(ref d) => {
+                    unsafe {
+                        CString::from_raw(content[index].field_value as *mut c_char);
+                    }
+                },
+
+                &ValueType::String(ref i) => {
+                    unsafe {
+                        CString::from_raw(content[index].field_value as *mut c_char);
+                    }
+                },
+
+                _ => {
+                }
+            }
+
+            index += 1;
+        }
+        
+    }
+    // println!("********** index, {}", index);
+    true
+}
+
 #[no_mangle]
 pub extern fn binlog_reader_read_table_map_event(ptr: *mut Event, info: *mut EventInfo, db_name: *mut u8, table_name: *mut u8) -> bool {
     let event = unsafe {
@@ -264,10 +306,6 @@ pub extern fn binlog_reader_read_insert_event_rows(ptr: *mut Event, info: *mut E
     true
 }
 
-/**
-let a = CString::new("Hello, world!").unwrap();
-let b = a.into_raw();
-*/
 #[no_mangle]
 pub extern fn binlog_reader_read_rows_event_content(ptr: *mut Event, info: *mut EventInfo, content: *mut FieldInfo, new_entry: bool) -> bool {
     let content : &mut [FieldInfo] = unsafe {
@@ -299,6 +337,36 @@ pub extern fn binlog_reader_read_rows_event_content(ptr: *mut Event, info: *mut 
         }
     }
     
+    true
+}
+
+#[no_mangle]
+pub extern fn binlog_reader_free_rows_event_content(ptr: *mut Event, info: *mut EventInfo, content: *mut FieldInfo) -> bool {
+    let content : &mut [FieldInfo] = unsafe {
+        let size = ((*info).row_count * (*info).col_count) as usize;
+        std::slice::from_raw_parts_mut(content, size)
+    };
+    
+    let event = unsafe {
+        assert!(!ptr.is_null());
+        &*ptr
+    };
+    
+    match event {
+        &Event::Update(ref e) => {
+            // entry1 and entry2 have same row * column numbers
+            free_event_rows(&e.entry1, content);
+        },
+        &Event::Insert(ref e) => {
+            free_event_rows(&e.entry, content);
+        },
+        &Event::Delete(ref e) => {
+            read_event_rows(&e.entry, content);
+        },
+        _ => {
+            assert!(false);
+        }
+    }
     true
 }
 
