@@ -58,25 +58,31 @@ impl Stream {
     }
      
     pub fn read(&mut self, size: usize) -> &[u8] {
-        let from = self.offset;
-        self.offset += size;
+        let mut from = self.offset;
 
         if from + size >= self.content.len() {
             match self.read_file(size) {
                 Ok(0) => {
                     // println!("Reach the end of this binlog file");
-                    self.offset -= size;
                     return &[][..]
                 },
                 Err(_) => {
-                    self.offset -= size;
                     return &[][..]
                 },
                 _ => {
                 }
             }
         }
-        
+        let threshold: usize = 1000000;
+        self.offset += size;
+        if from >= threshold {
+            let remain = self.content.drain(threshold .. ).collect();
+            self.content = remain;
+            self.offset -= threshold;
+            from -= threshold;
+            println!("Resize content len => {}", self.content.len());
+        }
+
         &self.content[from .. from + size]
     }
 
