@@ -11,7 +11,8 @@ pub struct Stream {
     filename: String,
     file: Option<File>,
     content: Vec<u8>,
-    offset: usize
+    offset: usize,
+    counter: usize,
 }
 
 
@@ -36,7 +37,9 @@ impl Stream {
                 filename: filename.to_string(),
                 file: Some(file), 
                 content: vec![], 
-                offset: 0})
+                offset: 0,
+                counter: 0
+                })
         } else {
             None
         }
@@ -83,15 +86,17 @@ impl Stream {
             println!("Resize content len => {}", self.content.len());
         }
 
+        println!("counter {}", self.counter);
         &self.content[from .. from + size]
     }
 
     // try! Read size * 2 bytes from file
     pub fn read_file(&mut self, size: usize) -> Result<usize> {
         let mut buffer = Vec::with_capacity(size * 2);
-        buffer.resize(size, 0); // TODO: Read more doc
+        buffer.resize(size * 2, 0); // TODO: Read more content into buffer, and reduce the read times
         if let Some(ref mut file) = self.file {
             let read = file.read(&mut buffer)?;
+            self.counter += 1;  // Read times + 1
             if read > 0 {
                 self.content.extend_from_slice(&buffer[0..read]);
                 Ok(read)
