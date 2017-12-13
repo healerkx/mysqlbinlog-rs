@@ -9,3 +9,5 @@ Usage:
 
 # Give argument --ignore with a db name, table name pattern to ignore the row events in that tables.
 ```
+
+- 2017-12-13 Reduce times of reading binlog file. Release the content memory in Vec[] for unused content. Fix python binding's dylib loading path.

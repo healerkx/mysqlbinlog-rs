@@ -1,6 +1,6 @@
 
 from ctypes import *
-import time
+import time, sys, os
 from decimal import Decimal as D
 
 # TODO: setup.py
@@ -116,8 +116,10 @@ class BinLogReader:
     """
     """
 
-    def __init__(self, filename):
-        self.d = cdll.LoadLibrary('/Users/healer/Projects/privates/mysqlbinlog-rs/target/debug/libmysqlbinlog.dylib')
+    def __init__(self, filename, debug=False):
+        project_path = os.path.realpath(os.path.join(__file__, '../../../'))
+        path = 'debug' if debug else 'release'
+        self.d = cdll.LoadLibrary('%s/target/%s/libmysqlbinlog.dylib' % (project_path, path))
         
         self.d.binlog_reader_new.restype = c_void_p
         self.reader = self.d.binlog_reader_new(bytes(filename, 'utf8'))
