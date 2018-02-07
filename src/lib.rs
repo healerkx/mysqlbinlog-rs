@@ -28,7 +28,6 @@ pub extern fn binlog_reader_new(filename: *const c_char) -> *mut Reader {
     
     if let Ok(reader) = Reader::new(&c) {
         let p = Box::into_raw(Box::new(reader));
-        // println!("{:?}", p);
         p
     } else {
         ptr::null_mut()
