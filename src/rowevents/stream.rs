@@ -62,7 +62,6 @@ impl Stream {
      
     pub fn read(&mut self, size: usize) -> &[u8] {
         let mut from = self.offset;
-
         if from + size >= self.content.len() {
             match self.read_file(size) {
                 Ok(0) => {
@@ -93,7 +92,7 @@ impl Stream {
     // try! Read size * 2 bytes from file
     pub fn read_file(&mut self, size: usize) -> Result<usize> {
         let mut buffer = Vec::with_capacity(size * 2);
-        buffer.resize(size * 2, 0); // TODO: Read more content into buffer, and reduce the read times
+        buffer.resize(size, 0); // TODO: Read more content into buffer, and reduce the read times
         if let Some(ref mut file) = self.file {
             let read = file.read(&mut buffer)?;
             self.counter += 1;  // Read times + 1
