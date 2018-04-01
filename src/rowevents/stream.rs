@@ -85,7 +85,7 @@ impl Stream {
             println!("Resize content len => {}", self.content.len());
         }
 
-        println!("counter {}", self.counter);
+        // println!("counter {}", self.counter);
         &self.content[from .. from + size]
     }
 

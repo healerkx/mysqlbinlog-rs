@@ -8,7 +8,7 @@ from optparse import OptionParser
 
 def print_row(row):
     for item in row:
-        if not item:
+        if item is None:
             print('<none>', end=', ')
         elif type(item) == bytes:
             print(str(item, 'utf8'), end=', ')
