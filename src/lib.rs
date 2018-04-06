@@ -165,20 +165,17 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
                     content[index].field_type = FieldType::Tiny as u32;
                     content[index].field_len = 1;
                     content[index].field_value = i as i64;
-                    // println!("TINY {:?}", i);
                 },
 
                 &ValueType::Shortint(i) => {
                     content[index].field_type = FieldType::Short as u32;
                     content[index].field_len = 2;
                     content[index].field_value = i as i64;
-                    // println!("SHORT {:?}", i);
                 },
                 &ValueType::Int(i) => {
                     content[index].field_type = FieldType::Long as u32;
                     content[index].field_len = 4;
                     content[index].field_value = i as i64;
-                    // println!("INT {:?}", i);
                 },
 
                 &ValueType::Longlong(i) => {
@@ -214,6 +211,12 @@ fn read_event_rows(entry_vec: &Vec<Vec<ValueType>>, content: &mut [FieldInfo]) -
                     content[index].field_value = CString::new(s).unwrap().into_raw() as i64;
                 },
 
+                &ValueType::Timestamp(i) => {
+                    content[index].field_type = FieldType::Timestamp as u32;
+                    content[index].field_len = 0;
+                    content[index].field_value = i as i64;
+                },
+                
                 &ValueType::Null => {
                     content[index].field_type = FieldType::Null as u32;
                     content[index].field_len = 0;

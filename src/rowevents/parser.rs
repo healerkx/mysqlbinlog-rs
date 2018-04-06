@@ -88,7 +88,7 @@ impl Parser {
             let event_len = cursor.read_i32::<LittleEndian>()?;
             let next_pos = cursor.read_i32::<LittleEndian>()?;
             let flags = cursor.read_i16::<LittleEndian>()?;
-        
+
             Ok(EventHeader::new(
                 timestamp,
                 type_code,
@@ -108,6 +108,7 @@ impl Parser {
     }
 
     pub fn read_rotate_event(&mut self, eh: &EventHeader) -> Result<Event> {
+        println!("Rotate---");
         Ok(Event::Rotate(RotateEvent::new()))
     }
 
@@ -124,6 +125,7 @@ impl Parser {
         let data = self.stream.read(12);
         let mut cursor = Cursor::new(&data);
         let xid = cursor.read_i64::<LittleEndian>()?;
+        println!("XID={}", xid);
         Ok(Event::Xid(XidEvent::new(xid)))
     }
 

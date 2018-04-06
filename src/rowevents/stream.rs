@@ -85,7 +85,6 @@ impl Stream {
             println!("Resize content len => {}", self.content.len());
         }
 
-        // println!("counter {}", self.counter);
         &self.content[from .. from + size]
     }
 
@@ -97,6 +96,8 @@ impl Stream {
             let read = file.read(&mut buffer)?;
             self.counter += 1;  // Read times + 1
             if read > 0 {
+                // TO fix!
+                // println!("DD {} {} {:?}", size, read, &buffer[0..read]);
                 self.content.extend_from_slice(&buffer[0..read]);
                 Ok(read)
             } else {

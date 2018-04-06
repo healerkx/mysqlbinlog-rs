@@ -69,7 +69,6 @@ impl Reader {
     pub fn read_event(&mut self) -> Result<(EventHeader, Event)> {
         if let Ok(eh) = self.read_event_header() {
             if self.skip_next_event || !self.is_concerned_event(eh.get_event_type()) {
-                
                 if let Ok(e) = self.read_unknown_event(&eh) {
                     // Recover from skip
                     self.set_skip_next_event(false);
@@ -87,7 +86,7 @@ impl Reader {
                     },
 
                     Event::Rotate(ref e) => {
-                        println!("");
+                        println!("Open next binlog file...");
                         self.open_next_binlog_file();
                     },
                     _ => ()

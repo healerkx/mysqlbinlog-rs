@@ -2,7 +2,7 @@
 use std::io::Cursor;
 use std::io::Result;
 use rowevents::value_type::*;
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, BigEndian, ReadBytesExt};
 use rowevents::descriptor_datetime::*;
 use rowevents::descriptor_decimal::*;
 
@@ -77,6 +77,14 @@ pub fn parse_field(field_type: u8, nullable: bool, metadata1: u8, metadata2: u8,
     } else if field_type == FieldType::Blob as u8 {
         let (strval, offset) = parse_blob(metadata1, metadata2, data)?;
         (strval, offset)
+    } else if field_type == FieldType::Timestamp as u8 {
+        let mut cursor = Cursor::new(&data);
+        let v:u32 = cursor.read_u32::<BigEndian>()?;
+        (ValueType::Timestamp(v), 4)
+    } else if field_type == FieldType::Timestamp2 as u8 {
+        let mut cursor = Cursor::new(&data);
+        let v:u32 = cursor.read_u32::<BigEndian>()?;
+        (ValueType::Timestamp(v), 4)
     } else {
         (ValueType::Unknown, 0)
     };
