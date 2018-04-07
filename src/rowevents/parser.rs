@@ -108,7 +108,6 @@ impl Parser {
     }
 
     pub fn read_rotate_event(&mut self, eh: &EventHeader) -> Result<Event> {
-        println!("Rotate---");
         Ok(Event::Rotate(RotateEvent::new()))
     }
 

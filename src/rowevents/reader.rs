@@ -66,8 +66,10 @@ impl Reader {
         return false;
     }
 
+    // ????
     pub fn read_event(&mut self) -> Result<(EventHeader, Event)> {
         if let Ok(eh) = self.read_event_header() {
+
             if self.skip_next_event || !self.is_concerned_event(eh.get_event_type()) {
                 if let Ok(e) = self.read_unknown_event(&eh) {
                     // Recover from skip
@@ -112,7 +114,11 @@ impl Reader {
         match eh.get_event_type() {
             QUERY_EVENT => self.parser.read_query_event(eh),
 
-            STOP_EVENT | ROTATE_EVENT => self.parser.read_rotate_event(eh),
+            STOP_EVENT | ROTATE_EVENT => {
+                let e = self.parser.read_rotate_event(eh);
+                self.open_next_binlog_file();
+                e
+            },
 
             FORMAT_DESCRIPTION_EVENT => self.parser.read_format_descriptor_event(eh),
             XID_EVENT => self.parser.read_xid_event(eh),

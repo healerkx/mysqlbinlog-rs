@@ -45,8 +45,6 @@ impl Stream {
         }
     }
 
-
-
     pub fn read_next_binlog_file(&mut self) {
         if let Some(next_binlog_filename) = get_next_binlog_filename(&self.filename) {
 
@@ -71,8 +69,12 @@ impl Stream {
                 Err(_) => {
                     return &[][..]
                 },
-                _ => {
-                }
+                Ok(read) if read < size => {
+                    // Sometimes, especially when end of the file, read < size;
+                    println!("!{:?}", &self.content[from .. from + read]);
+                    return &self.content[from .. from + read]
+                },
+                Ok(_) => {}
             }
         }
         let threshold: usize = 1000000;
