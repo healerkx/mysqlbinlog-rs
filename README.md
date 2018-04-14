@@ -1,5 +1,6 @@
 # mysqlbinlog-rs
 A MySQL binlog file (row format) parser in Rust
+The first stable version is 0.1.4
 
 I built a parser in Python3 in the early of this year. Now in Rust instead, for high efficiency, and provided a Python3 binding for conveniency.
 
@@ -22,5 +23,5 @@ Usage:
 ```
 
 
-
 - 2017-12-13 Reduce times of reading binlog file. Release the content memory in Vec[] for unused content. Fix python binding's dylib loading path.
+- 2018-04-02 Support Rotate event and timestamp type.
