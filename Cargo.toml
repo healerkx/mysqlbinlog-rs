@@ -1,6 +1,6 @@
 [package]
 name = "mysqlbinlog"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["healer_kx <healer.kx.yu@gmail.com>"]
 description = "mysqlbinlog-rs is for parsing MySQL binlog file (row format)"
 license = "MIT"
