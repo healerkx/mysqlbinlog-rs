@@ -8,14 +8,14 @@ use rowevents::descriptor_decimal::*;
 
 
 fn parse_string(metadata1: u8, metadata2: u8, data: &[u8]) -> Result<(ValueType, usize)> {
-    let max_len = metadata1 + metadata2 * 256;
+    let max_len = metadata1 + metadata2 * 256;  // 
     let strlen = data[0] as usize;
     let v = Vec::from(&data[1 .. strlen + 1]);
     Ok((ValueType::String(v), strlen + 1))
 }
 
 fn parse_varchar(metadata1: u8, metadata2: u8, data: &[u8]) -> Result<(ValueType, usize)> {
-    let max_len: u32 = metadata1 as u32 + metadata2 as u32 * 256;
+    let max_len: u32 = metadata1 as u32 + metadata2 as u32 * 256;   // Should ne LittleEndian
     let mut cursor = Cursor::new(&data);
     
     let (from, strlen) = if max_len < 256 {
@@ -23,7 +23,7 @@ fn parse_varchar(metadata1: u8, metadata2: u8, data: &[u8]) -> Result<(ValueType
     } else {
         (2, cursor.read_i16::<LittleEndian>()? as usize)
     };
-    
+
     let v = Vec::from(&data[from .. strlen + from]);
     Ok((ValueType::String(v), strlen + from))
 }

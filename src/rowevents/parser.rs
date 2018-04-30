@@ -192,6 +192,7 @@ impl Parser {
             let e = InsertEvent::new(rows);
             Ok(Event::Insert(e))
         } else {
+            // TODO:?
             let e = InsertEvent::new(vec![]);
             Ok(Event::Insert(e))
         }
@@ -311,7 +312,7 @@ impl Parser {
                 from += offset;
             }
         }
-        
+
         (values, p + from)
     }
 
@@ -359,7 +360,7 @@ impl Parser {
             let nullable = nullable_list[i];
             if col_type == FieldType::VarString as u8 || 
                col_type == FieldType::String as u8 {
-                //parse_type_length(md) // TODO:!
+            
                 metadata1 = md[0];
                 metadata2 = md[1];
                 slice_begin += 2;
@@ -377,10 +378,15 @@ impl Parser {
             } else if col_type == FieldType::Double as u8 ||
                       col_type == FieldType::Float as u8 {
                 // What's in metadata for float/double?
+                metadata1 = md[0];
                 slice_begin += 1;
+            } else if col_type == FieldType::Timestamp2 as u8 {
+                metadata1 = md[0];
+                slice_begin += 1
             }
             
             i += 1;
+            // println!("{}-{}-{}-{}", col_type, nullable, metadata1, metadata2);
             self.field_types.push((col_type, nullable, metadata1, metadata2));
         }
     }
